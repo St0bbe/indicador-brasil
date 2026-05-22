@@ -232,24 +232,30 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     }
 
     const periodLabel = PERIOD_PT[data.period];
-    const query = `índices de criminalidade estatísticas ${periodLabel} em ${data.city} site:g1.globo.com OR site:r7.com OR site:uol.com.br OR site:gov.br OR "secretaria de segurança pública"`;
+    const queries = [
+      `criminalidade estatísticas ${data.city} ${periodLabel}`,
+      `índices de violência ${data.city} Brasil`,
+      `segurança pública ${data.city} ocorrências policiais`,
+      `${data.city} roubos furtos homicídios estatística`,
+    ];
 
     let results: FirecrawlResult[] = [];
-    try {
-      const payload = await firecrawlSearch(query);
-      results = collectResults(payload);
-    } catch (e) {
-      // fallback: busca mais ampla sem filtro de domínio
-      const payload = await firecrawlSearch(
-        `estatísticas de criminalidade ${data.city} ${periodLabel} Brasil`,
-      );
-      results = collectResults(payload);
-      if (results.length === 0) throw e;
+    let lastErr: unknown = null;
+    for (const q of queries) {
+      try {
+        const payload = await firecrawlSearch(q);
+        results = collectResults(payload);
+        if (results.length > 0) break;
+      } catch (e) {
+        lastErr = e;
+      }
     }
 
     if (results.length === 0) {
-      throw new Error(`Nenhuma fonte encontrada para "${data.city}".`);
+      const detail = lastErr instanceof Error ? ` (${lastErr.message})` : "";
+      throw new Error(`Nenhuma fonte encontrada para "${data.city}"${detail}.`);
     }
+
 
     const report = await extractWithAI(data.city, data.period, results);
     cache.set(key, { at: Date.now(), data: report });
