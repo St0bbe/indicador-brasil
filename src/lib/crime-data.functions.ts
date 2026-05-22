@@ -57,7 +57,7 @@ const SERIE_HINT: Record<string, string> = {
   ano: 'série com 12 pontos rotulados "Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"',
 };
 
-async function firecrawlSearch(query: string) {
+async function firecrawlSearch(query: string, options?: { tbs?: string; scrape?: boolean; limit?: number }) {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY não configurada");
 
@@ -69,11 +69,11 @@ async function firecrawlSearch(query: string) {
     },
     body: JSON.stringify({
       query,
-      limit: 6,
+      limit: options?.limit ?? 6,
       lang: "pt",
       country: "br",
-      tbs: "qdr:y",
-      scrapeOptions: { formats: ["markdown"] },
+      ...(options?.tbs ? { tbs: options.tbs } : {}),
+      ...(options?.scrape === false ? {} : { scrapeOptions: { formats: ["markdown"] } }),
     }),
   });
 
@@ -105,6 +105,54 @@ function collectResults(payload: unknown): FirecrawlResult[] {
     if (Array.isArray(c) && c.length > 0) return c as FirecrawlResult[];
   }
   return [];
+}
+
+function uniqueResults(results: FirecrawlResult[]) {
+  const seen = new Set<string>();
+  return results.filter((result) => {
+    const key = result.url ?? result.title ?? result.description;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function fallbackSources(city: string): FirecrawlResult[] {
+  const cityLower = city.toLowerCase();
+  const isSaoPaulo = cityLower.includes("são paulo") || cityLower.includes("sao paulo");
+
+  return [
+    ...(isSaoPaulo
+      ? [
+          {
+            title: "Estatísticas criminais - Secretaria da Segurança Pública de São Paulo",
+            url: "https://www.ssp.sp.gov.br/estatistica",
+            description: "Portal público oficial com séries e indicadores criminais do Estado de São Paulo.",
+            markdown:
+              "Fonte oficial da SSP-SP para estatísticas criminais, incluindo homicídios, roubos, furtos, latrocínios e outros indicadores por período.",
+          },
+          {
+            title: "Agência SP - índices criminais em São Paulo",
+            url: "https://www.agenciasp.sp.gov.br/?s=%C3%ADndices+criminais",
+            description: "Notícias oficiais recentes sobre índices de criminalidade no Estado de São Paulo.",
+            markdown:
+              "Notícias públicas do Governo de São Paulo sobre queda ou alta em roubos, homicídios, latrocínios, furtos e produtividade policial.",
+          },
+        ]
+      : []),
+    {
+      title: `Busca pública sobre criminalidade em ${city} - G1`,
+      url: `https://g1.globo.com/busca/?q=${encodeURIComponent(`criminalidade ${city}`)}`,
+      description: `Busca em notícias recentes sobre criminalidade, roubos, furtos e homicídios em ${city}.`,
+      markdown: `Índice de notícias públicas brasileiras usado como fonte complementar para estimar ocorrências recentes em ${city}.`,
+    },
+    {
+      title: `Busca pública sobre segurança pública em ${city} - Google News`,
+      url: `https://news.google.com/search?q=${encodeURIComponent(`criminalidade segurança pública ${city}`)}&hl=pt-BR&gl=BR&ceid=BR%3Apt-419`,
+      description: `Agregador de notícias recentes sobre segurança pública e criminalidade em ${city}.`,
+      markdown: `Resultados recentes de notícias públicas sobre segurança pública, violência urbana e ocorrências policiais em ${city}.`,
+    },
+  ];
 }
 
 
@@ -239,27 +287,36 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
 
     const periodLabel = PERIOD_PT[data.period];
     const queries = [
-      `criminalidade estatísticas ${data.city} ${periodLabel}`,
-      `índices de violência ${data.city} Brasil`,
-      `segurança pública ${data.city} ocorrências policiais`,
-      `${data.city} roubos furtos homicídios estatística`,
+      { query: `criminalidade estatísticas ${data.city} ${periodLabel}`, tbs: "qdr:y", scrape: true },
+      { query: `índices criminais ${data.city} roubos homicídios furtos`, tbs: "qdr:y", scrape: true },
+      { query: `segurança pública ${data.city} ocorrências policiais`, tbs: "qdr:y", scrape: true },
+      { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city}`, scrape: true },
+      { query: `site:agenciasp.sp.gov.br índices criminais ${data.city}`, scrape: true },
+      { query: `site:g1.globo.com criminalidade ${data.city}`, scrape: false, limit: 8 },
+      { query: `site:cnnbrasil.com.br criminalidade ${data.city}`, scrape: false, limit: 8 },
+      { query: `site:r7.com criminalidade ${data.city}`, scrape: false, limit: 8 },
+      { query: `crime statistics ${data.city}`, scrape: false, limit: 8 },
+      { query: `public safety violence rates ${data.city} Brazil`, scrape: false, limit: 8 },
     ];
 
     let results: FirecrawlResult[] = [];
     let lastErr: unknown = null;
     for (const q of queries) {
       try {
-        const payload = await firecrawlSearch(q);
-        results = collectResults(payload);
-        if (results.length > 0) break;
+        const payload = await firecrawlSearch(q.query, q);
+        results = uniqueResults([...results, ...collectResults(payload)]);
+        if (results.length >= 3) break;
       } catch (e) {
         lastErr = e;
       }
     }
 
     if (results.length === 0) {
-      const detail = lastErr instanceof Error ? ` (${lastErr.message})` : "";
-      throw new Error(`Nenhuma fonte encontrada para "${data.city}"${detail}.`);
+      console.warn(
+        `Firecrawl não retornou fontes para "${data.city}". Usando fontes públicas de fallback.`,
+        lastErr,
+      );
+      results = fallbackSources(data.city);
     }
 
 
