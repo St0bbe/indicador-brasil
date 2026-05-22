@@ -92,15 +92,21 @@ interface FirecrawlResult {
 }
 
 function collectResults(payload: unknown): FirecrawlResult[] {
-  const p = payload as { data?: unknown; web?: unknown } | undefined;
-  const raw = p?.data ?? p?.web ?? [];
-  if (Array.isArray(raw)) return raw as FirecrawlResult[];
-  if (raw && typeof raw === "object" && "results" in raw) {
-    const r = (raw as { results?: unknown }).results;
-    if (Array.isArray(r)) return r as FirecrawlResult[];
+  const p = payload as { data?: any; web?: any } | undefined;
+  // Firecrawl v2: { success, data: { web: [...], news: [...] } }
+  // Variantes antigas: { data: [...] } ou { web: [...] }
+  const candidates: unknown[] = [
+    p?.data?.web,
+    p?.data?.news,
+    p?.data,
+    p?.web,
+  ];
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) return c as FirecrawlResult[];
   }
   return [];
 }
+
 
 async function extractWithAI(
   city: string,
@@ -232,24 +238,30 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     }
 
     const periodLabel = PERIOD_PT[data.period];
-    const query = `índices de criminalidade estatísticas ${periodLabel} em ${data.city} site:g1.globo.com OR site:r7.com OR site:uol.com.br OR site:gov.br OR "secretaria de segurança pública"`;
+    const queries = [
+      `criminalidade estatísticas ${data.city} ${periodLabel}`,
+      `índices de violência ${data.city} Brasil`,
+      `segurança pública ${data.city} ocorrências policiais`,
+      `${data.city} roubos furtos homicídios estatística`,
+    ];
 
     let results: FirecrawlResult[] = [];
-    try {
-      const payload = await firecrawlSearch(query);
-      results = collectResults(payload);
-    } catch (e) {
-      // fallback: busca mais ampla sem filtro de domínio
-      const payload = await firecrawlSearch(
-        `estatísticas de criminalidade ${data.city} ${periodLabel} Brasil`,
-      );
-      results = collectResults(payload);
-      if (results.length === 0) throw e;
+    let lastErr: unknown = null;
+    for (const q of queries) {
+      try {
+        const payload = await firecrawlSearch(q);
+        results = collectResults(payload);
+        if (results.length > 0) break;
+      } catch (e) {
+        lastErr = e;
+      }
     }
 
     if (results.length === 0) {
-      throw new Error(`Nenhuma fonte encontrada para "${data.city}".`);
+      const detail = lastErr instanceof Error ? ` (${lastErr.message})` : "";
+      throw new Error(`Nenhuma fonte encontrada para "${data.city}"${detail}.`);
     }
+
 
     const report = await extractWithAI(data.city, data.period, results);
     cache.set(key, { at: Date.now(), data: report });
