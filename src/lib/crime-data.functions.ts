@@ -287,27 +287,36 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
 
     const periodLabel = PERIOD_PT[data.period];
     const queries = [
-      `criminalidade estatísticas ${data.city} ${periodLabel}`,
-      `índices de violência ${data.city} Brasil`,
-      `segurança pública ${data.city} ocorrências policiais`,
-      `${data.city} roubos furtos homicídios estatística`,
+      { query: `criminalidade estatísticas ${data.city} ${periodLabel}`, tbs: "qdr:y", scrape: true },
+      { query: `índices criminais ${data.city} roubos homicídios furtos`, tbs: "qdr:y", scrape: true },
+      { query: `segurança pública ${data.city} ocorrências policiais`, tbs: "qdr:y", scrape: true },
+      { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city}`, scrape: true },
+      { query: `site:agenciasp.sp.gov.br índices criminais ${data.city}`, scrape: true },
+      { query: `site:g1.globo.com criminalidade ${data.city}`, scrape: false, limit: 8 },
+      { query: `site:cnnbrasil.com.br criminalidade ${data.city}`, scrape: false, limit: 8 },
+      { query: `site:r7.com criminalidade ${data.city}`, scrape: false, limit: 8 },
+      { query: `crime statistics ${data.city}`, scrape: false, limit: 8 },
+      { query: `public safety violence rates ${data.city} Brazil`, scrape: false, limit: 8 },
     ];
 
     let results: FirecrawlResult[] = [];
     let lastErr: unknown = null;
     for (const q of queries) {
       try {
-        const payload = await firecrawlSearch(q);
-        results = collectResults(payload);
-        if (results.length > 0) break;
+        const payload = await firecrawlSearch(q.query, q);
+        results = uniqueResults([...results, ...collectResults(payload)]);
+        if (results.length >= 3) break;
       } catch (e) {
         lastErr = e;
       }
     }
 
     if (results.length === 0) {
-      const detail = lastErr instanceof Error ? ` (${lastErr.message})` : "";
-      throw new Error(`Nenhuma fonte encontrada para "${data.city}"${detail}.`);
+      console.warn(
+        `Firecrawl não retornou fontes para "${data.city}". Usando fontes públicas de fallback.`,
+        lastErr,
+      );
+      results = fallbackSources(data.city);
     }
 
 
