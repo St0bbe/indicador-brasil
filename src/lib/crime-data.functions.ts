@@ -92,15 +92,21 @@ interface FirecrawlResult {
 }
 
 function collectResults(payload: unknown): FirecrawlResult[] {
-  const p = payload as { data?: unknown; web?: unknown } | undefined;
-  const raw = p?.data ?? p?.web ?? [];
-  if (Array.isArray(raw)) return raw as FirecrawlResult[];
-  if (raw && typeof raw === "object" && "results" in raw) {
-    const r = (raw as { results?: unknown }).results;
-    if (Array.isArray(r)) return r as FirecrawlResult[];
+  const p = payload as { data?: any; web?: any } | undefined;
+  // Firecrawl v2: { success, data: { web: [...], news: [...] } }
+  // Variantes antigas: { data: [...] } ou { web: [...] }
+  const candidates: unknown[] = [
+    p?.data?.web,
+    p?.data?.news,
+    p?.data,
+    p?.web,
+  ];
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) return c as FirecrawlResult[];
   }
   return [];
 }
+
 
 async function extractWithAI(
   city: string,
