@@ -349,7 +349,7 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const key = `${data.city.toLowerCase()}::${data.period}`;
     const hit = cache.get(key);
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+    if (!data.forceRefresh && hit && Date.now() - hit.at < CACHE_TTL_MS) {
       return hit.data;
     }
 
