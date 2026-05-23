@@ -274,7 +274,6 @@ export function CrimeDashboard() {
           </Card>
         </section>
 
-        {/* Fontes consultadas */}
         <section className="mt-6">
           <Card className="border-border/70 shadow-[var(--shadow-card)]">
             <CardHeader className="pb-2">
@@ -309,8 +308,9 @@ export function CrimeDashboard() {
               )}
             </CardContent>
           </Card>
-          </>
-        )}
+        </section>
+      </>
+    )}
 
         <footer className="mt-8 text-center text-xs text-muted-foreground">
           Coleta via Firecrawl • Estruturação via Lovable AI • Cache de 1 hora por cidade/período
