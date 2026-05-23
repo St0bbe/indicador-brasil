@@ -65,12 +65,18 @@ export function CrimeDashboard() {
   }, []);
 
   const callFn = useServerFn(fetchCrimeReport);
-  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["crime-report", city, period],
     queryFn: () => callFn({ data: { city, period } }),
     staleTime: 60 * 60 * 1000,
     retry: 0,
   });
+
+  const handleRefresh = async () => {
+    if (isFetching) return;
+    await callFn({ data: { city, period, forceRefresh: true } });
+    refetch();
+  };
 
   const variationUp = (data?.variacao ?? 0) >= 0;
   const loading = isLoading || isFetching;
