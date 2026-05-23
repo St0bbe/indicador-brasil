@@ -237,10 +237,11 @@ async function extractWithAI(
     })
     .join("\n\n");
 
+  const currentYear = new Date().getFullYear();
   const system =
-    "Você é um analista de segurança pública brasileiro. Extraia indicadores de criminalidade a partir dos textos fornecidos (notícias, portais de SSP, G1, R7, etc). Responda SOMENTE chamando a função extrair_indicadores. Todos os textos devem estar em Português do Brasil. Quando os dados forem estimativas a partir das notícias, use números plausíveis e coerentes com as fontes.";
+    `Você é um analista de segurança pública brasileiro especialista em dados atuais de ${currentYear}. Extraia indicadores de criminalidade a partir dos textos fornecidos (notícias, portais de SSP, G1, R7, etc). Priorize SEMPRE os dados mais recentes (maio de 2026 ou o período mais próximo disponível). Responda SOMENTE chamando a função extrair_indicadores. Todos os textos devem estar em Português do Brasil. Quando os dados forem estimativas a partir das notícias, use números plausíveis e coerentes com as fontes.`;
 
-  const user = `Cidade: ${city}\nPeríodo de análise: ${PERIOD_PT[period]}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
+  const user = `Cidade: ${city}\nPeríodo de análise solicitado: ${PERIOD_PT[period]}\nAno de referência: ${currentYear}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
 
   const body = {
     model: "google/gemini-2.5-flash",
