@@ -108,20 +108,43 @@ export function CrimeDashboard() {
         )}
 
         {isError && (
-          <Card className="mb-6 border-danger/40 bg-danger/5">
-            <CardContent className="flex items-center gap-3 py-4 text-sm text-danger">
-              <AlertTriangle className="h-4 w-4" />
-              <span>
-                {(error as Error)?.message ?? "Falha ao buscar dados."}{" "}
-                <button onClick={() => refetch()} className="underline">
-                  Tentar novamente
-                </button>
-              </span>
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="rounded-full bg-danger/10 p-4 mb-4">
+              <ShieldAlert className="h-10 w-10 text-danger" />
+            </div>
+            <h2 className="text-2xl font-bold text-navy mb-2">Sem dados disponíveis</h2>
+            <p className="text-muted-foreground max-w-md mb-6">
+              Não conseguimos coletar fontes confiáveis sobre a criminalidade em <strong>{city}</strong> no momento.
+              Tente novamente em alguns instantes ou escolha outra cidade.
+            </p>
+            <button 
+              onClick={() => refetch()} 
+              className="inline-flex items-center justify-center rounded-md bg-navy px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-navy/90 transition-colors"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
+        {!isError && data?.isMocked && (
+          <Card className="mb-6 border-amber-400/40 bg-amber-50">
+            <CardContent className="flex items-start gap-3 py-4 text-sm text-amber-800">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <div>
+                <span className="font-semibold block mb-1">Modo de Dados Simulados Ativado</span>
+                <p>
+                  Não foi possível encontrar fontes em tempo real suficientes para <strong>{city}</strong>. 
+                  Os números abaixo são estimativas geradas com base em médias históricas regionais para fins de visualização.
+                </p>
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* KPIs */}
+        {/* Conteúdo Principal (Só renderiza se não houver erro crítico) */}
+        {!isError && (
+          <>
+            {/* KPIs */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <KpiCard
             label="Total estimado de ocorrências"
@@ -286,7 +309,8 @@ export function CrimeDashboard() {
               )}
             </CardContent>
           </Card>
-        </section>
+          </>
+        )}
 
         <footer className="mt-8 text-center text-xs text-muted-foreground">
           Coleta via Firecrawl • Estruturação via Lovable AI • Cache de 1 hora por cidade/período
