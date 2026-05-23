@@ -102,13 +102,23 @@ export function CrimeDashboard() {
             <div className="w-full sm:w-64">
               <CityCombobox value={city} onChange={setCity} />
             </div>
-            <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="w-full sm:w-auto">
-              <TabsList className="bg-card shadow-sm w-full grid grid-cols-3 sm:flex sm:w-auto">
-                <TabsTrigger value="semana">Semana</TabsTrigger>
-                <TabsTrigger value="mes">Mês</TabsTrigger>
-                <TabsTrigger value="ano">Ano</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="flex-1 sm:w-auto">
+                <TabsList className="bg-card shadow-sm w-full grid grid-cols-3 sm:flex sm:w-auto">
+                  <TabsTrigger value="semana">Semana</TabsTrigger>
+                  <TabsTrigger value="mes">Mês</TabsTrigger>
+                  <TabsTrigger value="ano">Ano</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors"
+                title="Recarregar dados (ignorar cache)"
+              >
+                <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
           </div>
         </header>
 
