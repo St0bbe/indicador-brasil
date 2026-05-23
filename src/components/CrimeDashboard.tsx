@@ -302,14 +302,14 @@ export function CrimeDashboard() {
                   <PieChart>
                     <Pie
                       data={data.tiposFrequentes}
-                      cx="50%"
+                      cx="40%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
+                      innerRadius={70}
+                      outerRadius={95}
+                      paddingAngle={4}
                       dataKey="total"
                       nameKey="categoria"
-                      label={({ categoria, percent }) => `${categoria} (${(percent * 100).toFixed(0)}%)`}
+                      stroke="none"
                     >
                       {data.tiposFrequentes.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -321,10 +321,17 @@ export function CrimeDashboard() {
                         border: "1px solid oklch(0.91 0.012 250)",
                         borderRadius: 12,
                         fontSize: 12,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
                       }}
-                      formatter={(v: number) => [nf(v), "Total"]}
+                      formatter={(v: number, name: string) => [nf(v as number), name]}
                     />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Legend 
+                      layout="vertical" 
+                      verticalAlign="middle" 
+                      align="right"
+                      wrapperStyle={{ paddingLeft: "20px" }}
+                      formatter={(value) => <span className="text-xs font-medium text-navy/80">{value}</span>}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               )}
