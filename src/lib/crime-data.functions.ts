@@ -353,17 +353,21 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     }
 
     const periodLabel = PERIOD_PT[data.period];
+    const currentYear = new Date().getFullYear();
+    
+    // Define o filtro de tempo (tbs) baseado no período
+    // qdr:w (semana), qdr:m (mês), qdr:y (ano)
+    const timeFilter = data.period === "semana" ? "qdr:w" : data.period === "mes" ? "qdr:m" : "qdr:y";
+
     const queries = [
-      { query: `criminalidade estatísticas ${data.city} ${periodLabel}`, tbs: "qdr:y", scrape: true },
-      { query: `índices criminais ${data.city} roubos homicídios furtos`, tbs: "qdr:y", scrape: true },
-      { query: `segurança pública ${data.city} ocorrências policiais`, tbs: "qdr:y", scrape: true },
-      { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city}`, scrape: true },
-      { query: `site:agenciasp.sp.gov.br índices criminais ${data.city}`, scrape: true },
-      { query: `site:g1.globo.com criminalidade ${data.city}`, scrape: false, limit: 8 },
-      { query: `site:cnnbrasil.com.br criminalidade ${data.city}`, scrape: false, limit: 8 },
-      { query: `site:r7.com criminalidade ${data.city}`, scrape: false, limit: 8 },
-      { query: `crime statistics ${data.city}`, scrape: false, limit: 8 },
-      { query: `public safety violence rates ${data.city} Brazil`, scrape: false, limit: 8 },
+      { query: `criminalidade estatísticas ${data.city} ${periodLabel} ${currentYear}`, tbs: timeFilter, scrape: true },
+      { query: `índices criminais ${data.city} ${currentYear} notícias recentes`, tbs: "qdr:m", scrape: true },
+      { query: `segurança pública ${data.city} ocorrências policiais hoje`, tbs: "qdr:w", scrape: true },
+      { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city} ${currentYear}`, scrape: true },
+      { query: `site:agenciasp.sp.gov.br índices criminais ${data.city} ${currentYear}`, scrape: true },
+      { query: `site:g1.globo.com criminalidade ${data.city} ${currentYear}`, scrape: false, limit: 8 },
+      { query: `site:r7.com criminalidade ${data.city} ${currentYear}`, scrape: false, limit: 8 },
+      { query: `crime statistics ${data.city} Brazil ${currentYear}`, scrape: false, limit: 10 },
     ];
 
     let results: FirecrawlResult[] = [];
