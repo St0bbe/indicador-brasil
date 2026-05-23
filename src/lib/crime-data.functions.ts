@@ -398,11 +398,13 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
 
     try {
       const report = await extractWithAI(data.city, data.period, results);
+      report.updatedAt = Date.now();
       cache.set(key, { at: Date.now(), data: report });
       return report;
     } catch (e) {
       console.error("Erro ao extrair dados com IA, usando dados simulados:", e);
       const mockReport = generateMockData(data.city, data.period);
+      mockReport.updatedAt = Date.now();
       cache.set(key, { at: Date.now(), data: mockReport });
       return mockReport;
     }
