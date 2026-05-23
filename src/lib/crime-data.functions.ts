@@ -103,7 +103,12 @@ async function firecrawlSearch(query: string, options?: { tbs?: string; scrape?:
       // Se for erro de quota ou rate limit, o backoff ajuda
       throw new Error(`Firecrawl search falhou [${res.status}]: ${t.slice(0, 300)}`);
     }
-    return res.json();
+    const json = await res.json();
+    const results = collectResults(json);
+    if (results.length === 0) {
+      throw new Error("Firecrawl retornou resultados vazios.");
+    }
+    return json;
   });
 }
 
