@@ -12,6 +12,7 @@ import { z } from "zod";
 const InputSchema = z.object({
   city: z.string().min(2).max(80),
   period: z.enum(["semana", "mes", "ano"]),
+  forceRefresh: z.boolean().optional(),
 });
 
 const SourceSchema = z.object({
