@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -54,6 +54,14 @@ const COLORS = ["#0F172A", "#E11D48", "#10B981", "#F59E0B", "#6366F1", "#EC4899"
 export function CrimeDashboard() {
   const [city, setCity] = useState("São Paulo");
   const [period, setPeriod] = useState<Period>("mes");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const callFn = useServerFn(fetchCrimeReport);
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
@@ -298,14 +306,14 @@ export function CrimeDashboard() {
               {loading || !data ? (
                 <Skeleton className="h-[320px] w-full" />
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={isMobile ? 400 : 320}>
                   <PieChart>
                     <Pie
                       data={data.tiposFrequentes}
-                      cx="40%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={95}
+                      cx={isMobile ? "50%" : "40%"}
+                      cy={isMobile ? "40%" : "50%"}
+                      innerRadius={isMobile ? 60 : 70}
+                      outerRadius={isMobile ? 85 : 95}
                       paddingAngle={4}
                       dataKey="total"
                       nameKey="categoria"
@@ -326,11 +334,11 @@ export function CrimeDashboard() {
                       formatter={(v: number, name: string) => [nf(v as number), name]}
                     />
                     <Legend 
-                      layout="vertical" 
-                      verticalAlign="middle" 
-                      align="right"
-                      wrapperStyle={{ paddingLeft: "20px" }}
-                      formatter={(value) => <span className="text-xs font-medium text-navy/80">{value}</span>}
+                      layout={isMobile ? "horizontal" : "vertical"} 
+                      verticalAlign={isMobile ? "bottom" : "middle"} 
+                      align={isMobile ? "center" : "right"}
+                      wrapperStyle={isMobile ? { paddingTop: "20px" } : { paddingLeft: "20px" }}
+                      formatter={(value) => <span className="text-[10px] sm:text-xs font-medium text-navy/80">{value}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
