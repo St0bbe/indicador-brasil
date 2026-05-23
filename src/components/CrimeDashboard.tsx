@@ -2,15 +2,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  Legend,
 } from "recharts";
 import {
   AlertTriangle,
@@ -42,6 +48,8 @@ const PERIOD_LABEL: Record<Period, string> = {
 function nf(n: number) {
   return new Intl.NumberFormat("pt-BR").format(Math.round(n));
 }
+
+const COLORS = ["#0F172A", "#E11D48", "#10B981", "#F59E0B", "#6366F1", "#EC4899", "#8B5CF6"];
 
 export function CrimeDashboard() {
   const [city, setCity] = useState("São Paulo");
@@ -195,8 +203,12 @@ export function CrimeDashboard() {
                 <Skeleton className="h-[320px] w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={data.serie} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
+                  <AreaChart data={data.serie} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
                     <defs>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="oklch(0.32 0.09 255)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="oklch(0.32 0.09 255)" stopOpacity={0}/>
+                      </linearGradient>
                       <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor="oklch(0.32 0.09 255)" />
                         <stop offset="100%" stopColor="oklch(0.58 0.22 25)" />
@@ -215,15 +227,15 @@ export function CrimeDashboard() {
                       labelStyle={{ color: "oklch(0.28 0.07 255)", fontWeight: 600 }}
                       formatter={(v: number) => [nf(v), "Ocorrências"]}
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="total"
                       stroke="url(#lineGrad)"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: "oklch(0.28 0.07 255)" }}
-                      activeDot={{ r: 6 }}
+                      fillOpacity={1}
+                      fill="url(#areaGrad)"
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               )}
             </CardContent>
@@ -269,6 +281,74 @@ export function CrimeDashboard() {
                     <Bar dataKey="total" fill="oklch(0.58 0.22 25)" radius={[0, 6, 6, 0]} barSize={18} />
                   </BarChart>
                 </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+        
+        <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card className="border-border/70 shadow-[var(--shadow-card)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-navy">
+                Distribuição Percentual
+              </CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">Composição relativa em {city}</p>
+            </CardHeader>
+            <CardContent className="pt-2">
+              {loading || !data ? (
+                <Skeleton className="h-[320px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart>
+                    <Pie
+                      data={data.tiposFrequentes}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="total"
+                      nameKey="categoria"
+                      label={({ categoria, percent }) => `${categoria} (${(percent * 100).toFixed(0)}%)`}
+                    >
+                      {data.tiposFrequentes.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid oklch(0.91 0.012 250)",
+                        borderRadius: 12,
+                        fontSize: 12,
+                      }}
+                      formatter={(v: number) => [nf(v), "Total"]}
+                    />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70 shadow-[var(--shadow-card)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-navy">
+                Resumo Analítico (IA)
+              </CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">Principais observações</p>
+            </CardHeader>
+            <CardContent className="pt-2">
+              {loading || !data ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-[90%]" />
+                  <Skeleton className="h-4 w-[80%]" />
+                </div>
+              ) : (
+                <div className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                  {data.resumo || "A IA não gerou um resumo específico para este período."}
+                </div>
               )}
             </CardContent>
           </Card>
