@@ -426,8 +426,14 @@ export function CrimeDashboard() {
       </>
     )}
 
-        <footer className="mt-8 text-center text-xs text-muted-foreground">
-          Coleta via Firecrawl • Estruturação via Lovable AI • Cache de 1 hora por cidade/período
+        <footer className="mt-8 flex flex-col items-center gap-2 text-center text-xs text-muted-foreground pb-8">
+          <div>Coleta via Firecrawl • Estruturação via Lovable AI</div>
+          {data?.updatedAt && (
+            <div>
+              Última atualização: {new Date(data.updatedAt).toLocaleString("pt-BR")}
+            </div>
+          )}
+          <div className="opacity-70">Cache de 1 hora por cidade/período</div>
         </footer>
       </div>
     </div>
