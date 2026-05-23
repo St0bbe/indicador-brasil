@@ -39,6 +39,7 @@ export const CrimeReportSchema = z.object({
   fontesConsultadas: z.array(SourceSchema),
   resumo: z.string().optional(),
   isMocked: z.boolean().optional(),
+  updatedAt: z.number().optional(),
 });
 
 export type CrimeReport = z.infer<typeof CrimeReportSchema>;
