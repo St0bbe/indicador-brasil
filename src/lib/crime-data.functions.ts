@@ -385,6 +385,10 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
       results = fallbackSources(data.city);
     }
 
+    if (results.length === 0) {
+      throw new Error(`Não foi possível encontrar fontes para a cidade de ${data.city}.`);
+    }
+
     try {
       const report = await extractWithAI(data.city, data.period, results);
       cache.set(key, { at: Date.now(), data: report });
