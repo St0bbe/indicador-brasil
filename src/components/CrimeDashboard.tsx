@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Info,
   Loader2,
+  RefreshCcw,
   ShieldAlert,
   TrendingUp,
 } from "lucide-react";
@@ -64,12 +65,18 @@ export function CrimeDashboard() {
   }, []);
 
   const callFn = useServerFn(fetchCrimeReport);
-  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["crime-report", city, period],
     queryFn: () => callFn({ data: { city, period } }),
     staleTime: 60 * 60 * 1000,
     retry: 0,
   });
+
+  const handleRefresh = async () => {
+    if (isFetching) return;
+    await callFn({ data: { city, period, forceRefresh: true } });
+    refetch();
+  };
 
   const variationUp = (data?.variacao ?? 0) >= 0;
   const loading = isLoading || isFetching;
@@ -95,13 +102,23 @@ export function CrimeDashboard() {
             <div className="w-full sm:w-64">
               <CityCombobox value={city} onChange={setCity} />
             </div>
-            <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="w-full sm:w-auto">
-              <TabsList className="bg-card shadow-sm w-full grid grid-cols-3 sm:flex sm:w-auto">
-                <TabsTrigger value="semana">Semana</TabsTrigger>
-                <TabsTrigger value="mes">Mês</TabsTrigger>
-                <TabsTrigger value="ano">Ano</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="flex-1 sm:w-auto">
+                <TabsList className="bg-card shadow-sm w-full grid grid-cols-3 sm:flex sm:w-auto">
+                  <TabsTrigger value="semana">Semana</TabsTrigger>
+                  <TabsTrigger value="mes">Mês</TabsTrigger>
+                  <TabsTrigger value="ano">Ano</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors"
+                title="Recarregar dados (ignorar cache)"
+              >
+                <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -409,8 +426,14 @@ export function CrimeDashboard() {
       </>
     )}
 
-        <footer className="mt-8 text-center text-xs text-muted-foreground">
-          Coleta via Firecrawl • Estruturação via Lovable AI • Cache de 1 hora por cidade/período
+        <footer className="mt-8 flex flex-col items-center gap-2 text-center text-xs text-muted-foreground pb-8">
+          <div>Coleta via Firecrawl • Estruturação via Lovable AI</div>
+          {data?.updatedAt && (
+            <div>
+              Última atualização: {new Date(data.updatedAt).toLocaleString("pt-BR")}
+            </div>
+          )}
+          <div className="opacity-70">Cache de 1 hora por cidade/período</div>
         </footer>
       </div>
     </div>

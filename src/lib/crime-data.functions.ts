@@ -12,6 +12,7 @@ import { z } from "zod";
 const InputSchema = z.object({
   city: z.string().min(2).max(80),
   period: z.enum(["semana", "mes", "ano"]),
+  forceRefresh: z.boolean().optional(),
 });
 
 const SourceSchema = z.object({
@@ -38,6 +39,7 @@ export const CrimeReportSchema = z.object({
   fontesConsultadas: z.array(SourceSchema),
   resumo: z.string().optional(),
   isMocked: z.boolean().optional(),
+  updatedAt: z.number().optional(),
 });
 
 export type CrimeReport = z.infer<typeof CrimeReportSchema>;
@@ -237,10 +239,11 @@ async function extractWithAI(
     })
     .join("\n\n");
 
+  const currentYear = new Date().getFullYear();
   const system =
-    "Você é um analista de segurança pública brasileiro. Extraia indicadores de criminalidade a partir dos textos fornecidos (notícias, portais de SSP, G1, R7, etc). Responda SOMENTE chamando a função extrair_indicadores. Todos os textos devem estar em Português do Brasil. Quando os dados forem estimativas a partir das notícias, use números plausíveis e coerentes com as fontes.";
+    `Você é um analista de segurança pública brasileiro especialista em dados atuais de ${currentYear}. Extraia indicadores de criminalidade a partir dos textos fornecidos (notícias, portais de SSP, G1, R7, etc). Priorize SEMPRE os dados mais recentes (maio de 2026 ou o período mais próximo disponível). Responda SOMENTE chamando a função extrair_indicadores. Todos os textos devem estar em Português do Brasil. Quando os dados forem estimativas a partir das notícias, use números plausíveis e coerentes com as fontes.`;
 
-  const user = `Cidade: ${city}\nPeríodo de análise: ${PERIOD_PT[period]}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
+  const user = `Cidade: ${city}\nPeríodo de análise solicitado: ${PERIOD_PT[period]}\nAno de referência: ${currentYear}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
 
   const body = {
     model: "google/gemini-2.5-flash",
@@ -347,22 +350,26 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const key = `${data.city.toLowerCase()}::${data.period}`;
     const hit = cache.get(key);
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+    if (!data.forceRefresh && hit && Date.now() - hit.at < CACHE_TTL_MS) {
       return hit.data;
     }
 
     const periodLabel = PERIOD_PT[data.period];
+    const currentYear = new Date().getFullYear();
+    
+    // Define o filtro de tempo (tbs) baseado no período
+    // qdr:w (semana), qdr:m (mês), qdr:y (ano)
+    const timeFilter = data.period === "semana" ? "qdr:w" : data.period === "mes" ? "qdr:m" : "qdr:y";
+
     const queries = [
-      { query: `criminalidade estatísticas ${data.city} ${periodLabel}`, tbs: "qdr:y", scrape: true },
-      { query: `índices criminais ${data.city} roubos homicídios furtos`, tbs: "qdr:y", scrape: true },
-      { query: `segurança pública ${data.city} ocorrências policiais`, tbs: "qdr:y", scrape: true },
-      { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city}`, scrape: true },
-      { query: `site:agenciasp.sp.gov.br índices criminais ${data.city}`, scrape: true },
-      { query: `site:g1.globo.com criminalidade ${data.city}`, scrape: false, limit: 8 },
-      { query: `site:cnnbrasil.com.br criminalidade ${data.city}`, scrape: false, limit: 8 },
-      { query: `site:r7.com criminalidade ${data.city}`, scrape: false, limit: 8 },
-      { query: `crime statistics ${data.city}`, scrape: false, limit: 8 },
-      { query: `public safety violence rates ${data.city} Brazil`, scrape: false, limit: 8 },
+      { query: `criminalidade estatísticas ${data.city} ${periodLabel} ${currentYear}`, tbs: timeFilter, scrape: true },
+      { query: `índices criminais ${data.city} ${currentYear} notícias recentes`, tbs: "qdr:m", scrape: true },
+      { query: `segurança pública ${data.city} ocorrências policiais hoje`, tbs: "qdr:w", scrape: true },
+      { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city} ${currentYear}`, scrape: true },
+      { query: `site:agenciasp.sp.gov.br índices criminais ${data.city} ${currentYear}`, scrape: true },
+      { query: `site:g1.globo.com criminalidade ${data.city} ${currentYear}`, scrape: false, limit: 8 },
+      { query: `site:r7.com criminalidade ${data.city} ${currentYear}`, scrape: false, limit: 8 },
+      { query: `crime statistics ${data.city} Brazil ${currentYear}`, scrape: false, limit: 10 },
     ];
 
     let results: FirecrawlResult[] = [];
@@ -391,11 +398,13 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
 
     try {
       const report = await extractWithAI(data.city, data.period, results);
+      report.updatedAt = Date.now();
       cache.set(key, { at: Date.now(), data: report });
       return report;
     } catch (e) {
       console.error("Erro ao extrair dados com IA, usando dados simulados:", e);
       const mockReport = generateMockData(data.city, data.period);
+      mockReport.updatedAt = Date.now();
       cache.set(key, { at: Date.now(), data: mockReport });
       return mockReport;
     }
