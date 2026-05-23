@@ -273,7 +273,7 @@ export function CrimeDashboard() {
                       dataKey="category"
                       stroke="oklch(0.55 0.04 250)"
                       fontSize={11}
-                      width={120}
+                      width={isMobile ? 80 : 120}
                       tickLine={false}
                       axisLine={false}
                     />
