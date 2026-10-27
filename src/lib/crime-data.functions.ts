@@ -11,7 +11,7 @@ import { z } from "zod";
 
 const InputSchema = z.object({
   city: z.string().min(2).max(80),
-  period: z.enum(["semana", "mes", "ano"]),
+  period: z.enum(["mes", "ano"]),
   forceRefresh: z.boolean().optional(),
 });
 
@@ -54,13 +54,11 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora
 const cache = new Map<string, { at: number; data: CrimeReport }>();
 
 const PERIOD_PT: Record<string, string> = {
-  semana: "última semana",
   mes: "último mês",
   ano: "último ano",
 };
 
 const SERIE_HINT: Record<string, string> = {
-  semana: 'série com 7 pontos rotulados "Seg","Ter","Qua","Qui","Sex","Sáb","Dom"',
   mes: 'série com 4 ou 5 pontos rotulados "Sem 1","Sem 2","Sem 3","Sem 4","Sem 5"',
   ano: 'série com 12 pontos rotulados "Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"',
 };
