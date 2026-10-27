@@ -262,7 +262,7 @@ export function CrimeDashboard() {
             {period === "ano" ? <>
             <section className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-base font-bold text-slate-900">Indicadores de 2026</h3>
+                <h3 className="text-base font-bold text-slate-900">Indicadores de 2026 (dados parciais)</h3>
                 <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">Ano em andamento · dados parciais</span>
               </div>
               {ufOficial === "São Paulo" && anoGrafico === "2026" ? (
@@ -288,11 +288,16 @@ export function CrimeDashboard() {
                 </div>
               )}
             </section>
+            <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700">
+              <p className="font-bold text-slate-900">O que são Mortes Violentas Intencionais (MVI)?</p>
+              <p className="mt-1">É o total de vítimas de mortes provocadas intencionalmente, incluindo homicídio doloso, latrocínio (roubo seguido de morte), lesão corporal seguida de morte e mortes decorrentes de intervenções policiais. Não é apenas a contagem de homicídios.</p>
+              <p className="mt-2 text-xs">A taxa por 100 mil habitantes permite comparar localidades de tamanhos diferentes. Os números abaixo se referem ao estado selecionado; os anos de 2024 e 2025 são históricos e não devem ser interpretados como resultados de 2026.</p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                { titulo: "MVI em 2024", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][0]), estilo: "border-slate-200 bg-gradient-to-br from-slate-50 to-white text-slate-900" },
-                { titulo: "MVI em 2025", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][1]), estilo: "border-rose-200 bg-gradient-to-br from-rose-50 to-white text-rose-800" },
-                { titulo: "Taxa de MVI por 100 mil (2025)", valor: (oficiais.dados as Record<string, number[]>)[ufOficial][3].toLocaleString("pt-BR"), estilo: "border-blue-200 bg-gradient-to-br from-blue-50 to-white text-blue-900" },
+                { titulo: "Mortes violentas intencionais — 2024", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][0]), estilo: "border-slate-200 bg-gradient-to-br from-slate-50 to-white text-slate-900" },
+                { titulo: "Mortes violentas intencionais — 2025", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][1]), estilo: "border-rose-200 bg-gradient-to-br from-rose-50 to-white text-rose-800" },
+                { titulo: "Mortes violentas por 100 mil habitantes — 2025", valor: (oficiais.dados as Record<string, number[]>)[ufOficial][3].toLocaleString("pt-BR"), estilo: "border-blue-200 bg-gradient-to-br from-blue-50 to-white text-blue-900" },
               ].map(item => (
                 <div key={item.titulo} className={`rounded-2xl border p-5 shadow-sm ${item.estilo}`}>
                   <p className="text-xs font-semibold tracking-wide opacity-75">{item.titulo}</p>
@@ -305,7 +310,7 @@ export function CrimeDashboard() {
               <section className="min-w-0 rounded-2xl border border-rose-100 bg-gradient-to-br from-white to-rose-50/50 p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">Mortes violentas intencionais</h3>
+                    <h3 className="text-base font-bold text-slate-900">Mortes violentas intencionais (MVI)</h3>
                     <p className="mt-1 text-xs text-slate-500">{ufOficial} · vítimas · ano selecionado: {anoGrafico}</p>
                   </div>
                   {(() => {
@@ -316,7 +321,7 @@ export function CrimeDashboard() {
                     </span>;
                   })()}
                 </div>
-                {anoGrafico === "2026" ? <div className="mt-5 flex h-64 items-center justify-center rounded-xl bg-white p-5 text-center text-sm text-slate-600">Ainda não há MVI de 2026 com a mesma definição e abrangência nesta base. Consulte a seção de indicadores parciais de 2026.</div> : <div className="mt-5 h-64 w-full">
+                {anoGrafico === "2026" ? <div className="mt-5 flex h-64 items-center justify-center rounded-xl bg-white p-5 text-center text-sm text-slate-600">Ainda não há dados de mortes violentas intencionais (MVI) de 2026 com a mesma definição e abrangência nesta base. Consulte a seção de indicadores parciais de 2026.</div> : <div className="mt-5 h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart margin={{ top: 22, right: 10, left: 0, bottom: 0 }} barCategoryGap="42%" data={[{ ano: anoGrafico, total: (oficiais.dados as Record<string, number[]>)[ufOficial][anoGrafico === "2024" ? 0 : 1] }]}>
                       <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 4" />
