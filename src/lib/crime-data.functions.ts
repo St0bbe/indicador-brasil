@@ -150,83 +150,6 @@ function uniqueResults(results: FirecrawlResult[]) {
   });
 }
 
-function fallbackSources(city: string): FirecrawlResult[] {
-  const cityLower = city.toLowerCase();
-  const isSaoPaulo = cityLower.includes("são paulo") || cityLower.includes("sao paulo");
-
-  return [
-    ...(isSaoPaulo
-      ? [
-          {
-            title: "Estatísticas criminais - Secretaria da Segurança Pública de São Paulo",
-            url: "https://www.ssp.sp.gov.br/estatistica",
-            description: "Portal público oficial com séries e indicadores criminais do Estado de São Paulo.",
-            markdown:
-              "Fonte oficial da SSP-SP para estatísticas criminais, incluindo homicídios, roubos, furtos, latrocínios e outros indicadores por período.",
-          },
-          {
-            title: "Agência SP - índices criminais em São Paulo",
-            url: "https://www.agenciasp.sp.gov.br/?s=%C3%ADndices+criminais",
-            description: "Notícias oficiais recentes sobre índices de criminalidade no Estado de São Paulo.",
-            markdown:
-              "Notícias públicas do Governo de São Paulo sobre queda ou alta em roubos, homicídios, latrocínios, furtos e produtividade policial.",
-          },
-        ]
-      : []),
-    {
-      title: `Busca pública sobre criminalidade em ${city} - G1`,
-      url: `https://g1.globo.com/busca/?q=${encodeURIComponent(`criminalidade ${city}`)}`,
-      description: `Busca em notícias recentes sobre criminalidade, roubos, furtos e homicídios em ${city}.`,
-      markdown: `Índice de notícias públicas brasileiras usado como fonte complementar para estimar ocorrências recentes em ${city}.`,
-    },
-    {
-      title: `Busca pública sobre segurança pública em ${city} - Google News`,
-      url: `https://news.google.com/search?q=${encodeURIComponent(`criminalidade segurança pública ${city}`)}&hl=pt-BR&gl=BR&ceid=BR%3Apt-419`,
-      description: `Agregador de notícias recentes sobre segurança pública e criminalidade em ${city}.`,
-      markdown: `Resultados recentes de notícias públicas sobre segurança pública, violência urbana e ocorrências policiais em ${city}.`,
-    },
-  ];
-}
-
-
-function generateMockData(city: string, period: "semana" | "mes" | "ano"): CrimeReport {
-  const isSemana = period === "semana";
-  const isMes = period === "mes";
-  
-  const baseTotal = isSemana ? 150 : isMes ? 600 : 7200;
-  const variation = (Math.random() * 20 - 10); // -10% a +10%
-
-  const labels = isSemana 
-    ? ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
-    : isMes
-    ? ["Sem 1", "Sem 2", "Sem 3", "Sem 4"]
-    : ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-  const serie = labels.map(label => ({
-    label,
-    total: Math.round((baseTotal / labels.length) * (0.8 + Math.random() * 0.4))
-  }));
-
-  const totalOcorrencias = serie.reduce((acc, curr) => acc + curr.total, 0);
-
-  return {
-    totalOcorrencias,
-    variacao: variation,
-    tipoMaisFrequente: "Roubo/Furto",
-    tiposFrequentes: [
-      { categoria: "Roubo/Furto", total: Math.round(totalOcorrencias * 0.6) },
-      { categoria: "Ameaça", total: Math.round(totalOcorrencias * 0.2) },
-      { categoria: "Lesão Corporal", total: Math.round(totalOcorrencias * 0.1) },
-      { categoria: "Outros", total: Math.round(totalOcorrencias * 0.1) },
-    ],
-    serie,
-    fontesConsultadas: [],
-    resumo: `Dados simulados para ${city} devido à indisponibilidade de fontes em tempo real. Os números refletem padrões históricos médios para cidades brasileiras de porte similar.`,
-    isMocked: true,
-  };
-}
-
-
 async function extractWithAI(
   city: string,
   period: "semana" | "mes" | "ano",
@@ -380,14 +303,13 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     ];
 
     let results: FirecrawlResult[] = [];
-    let lastErr: unknown = null;
     for (const q of queries) {
       try {
         const payload = await firecrawlSearch(q.query, q);
         results = uniqueResults([...results, ...collectResults(payload)]);
         // Continue pesquisando para reunir fontes primárias e contexto complementar.
       } catch (e) {
-        lastErr = e;
+        console.warn("Consulta a fonte indisponível:", q.query, e);
       }
     }
 
