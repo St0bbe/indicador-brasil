@@ -37,6 +37,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CityCombobox } from "@/components/CityCombobox";
 import { fetchCrimeReport } from "@/lib/crime-data.functions";
+import oficiais from "@/data/indicadores-oficiais-2026.json";
 
 type Period = "semana" | "mes" | "ano";
 
@@ -54,6 +55,8 @@ const COLORS = ["#0F172A", "#E11D48", "#10B981", "#F59E0B", "#6366F1", "#EC4899"
 
 export function CrimeDashboard() {
   const [city, setCity] = useState("São Paulo");
+  const [ufOficial, setUfOficial] = useState("São Paulo");
+  const [buscaUf, setBuscaUf] = useState("");
   const [period, setPeriod] = useState<Period>("mes");
   const [isMobile, setIsMobile] = useState(false);
 
@@ -130,6 +133,25 @@ export function CrimeDashboard() {
             <span>
               Os indicadores dependem de <strong>dados oficiais documentados</strong>, com prioridade para Atlas da Violência e Anuário Brasileiro de Segurança Pública. Notícias são apenas contexto. A disponibilidade varia conforme a cidade e o período; não são gerados números fictícios.
             </span>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6 border-border/70">
+          <CardHeader><CardTitle>Dados oficiais disponíveis — Brasil e estados</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">Consulta independente da pesquisa municipal. MVI do Anuário Brasileiro de Segurança Pública 2026; dados referentes a 2024 e 2025.</p>
+            <label htmlFor="busca-estado" className="block text-sm font-medium">Pesquisar estado</label>
+            <input id="busca-estado" type="search" value={buscaUf} onChange={e => setBuscaUf(e.target.value)} placeholder="Digite o estado…" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" />
+            <select aria-label="Escolher estado" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" value={ufOficial} onChange={e => setUfOficial(e.target.value)}>
+              {!Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).includes(ufOficial) && <option value={ufOficial}>{ufOficial}</option>}
+              {Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).map(nome => <option key={nome} value={nome}>{nome}</option>)}
+            </select>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">MVI 2024</p><p className="text-2xl font-bold">{nf((oficiais.dados as Record<string, number[]>)[ufOficial][0])}</p></div>
+              <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">MVI 2025</p><p className="text-2xl font-bold">{nf((oficiais.dados as Record<string, number[]>)[ufOficial][1])}</p></div>
+              <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">Taxa de MVI 2025 por 100 mil</p><p className="text-2xl font-bold">{(oficiais.dados as Record<string, number[]>)[ufOficial][3].toLocaleString("pt-BR")}</p></div>
+            </div>
+            <a href="/fontes-oficiais" className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Ver todas as categorias oficiais</a>
           </CardContent>
         </Card>
 
