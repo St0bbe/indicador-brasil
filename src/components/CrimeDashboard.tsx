@@ -38,6 +38,9 @@ import { Badge } from "@/components/ui/badge";
 import { CityCombobox } from "@/components/CityCombobox";
 import { fetchCrimeReport } from "@/lib/crime-data.functions";
 import oficiais from "@/data/indicadores-oficiais-2026.json";
+import patrimonioUf from "@/data/patrimonio-uf-2025.json";
+import crimesUf from "@/data/crimes-uf-2025.json";
+import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
 
 type Period = "semana" | "mes" | "ano";
 
@@ -176,6 +179,55 @@ export function CrimeDashboard() {
               <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">MVI 2025</p><p className="text-2xl font-bold">{nf((oficiais.dados as Record<string, number[]>)[ufOficial][1])}</p></div>
               <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">Taxa de MVI 2025 por 100 mil</p><p className="text-2xl font-bold">{(oficiais.dados as Record<string, number[]>)[ufOficial][3].toLocaleString("pt-BR")}</p></div>
             </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-3 text-base font-semibold">Mortes violentas intencionais — {ufOficial}</h3>
+                <p className="mb-2 text-xs text-muted-foreground">Total de vítimas por ano, abrangência estadual ou nacional</p>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[{ ano: "2024", total: (oficiais.dados as Record<string, number[]>)[ufOficial][0] }, { ano: "2025", total: (oficiais.dados as Record<string, number[]>)[ufOficial][1] }]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="ano" />
+                      <YAxis tickFormatter={nf} width={65} />
+                      <Tooltip formatter={(value) => nf(Number(value))} />
+                      <Bar dataKey="total" name="Vítimas" fill="#334155" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-3 text-base font-semibold">Roubos e furtos — {ufOficial}</h3>
+                <p className="mb-2 text-xs text-muted-foreground">Registros oficiais em 2025, categorias patrimoniais distintas</p>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" margin={{ left: 25 }} data={patrimonioUf.campos.map((campo, i) => ({ categoria: campo.replaceAll("_", " "), total: (patrimonioUf.dados as Record<string, number[]>)[ufOficial]?.[i] ?? 0 }))}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={nf} />
+                      <YAxis type="category" dataKey="categoria" width={105} tick={{ fontSize: 10 }} />
+                      <Tooltip formatter={(value) => nf(Number(value))} />
+                      <Bar dataKey="total" name="Registros" fill="#64748b" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-3 text-base font-semibold">Outras categorias criminais — {ufOficial}, 2025</h3>
+              <p className="mb-3 text-xs text-muted-foreground">Registros/vítimas conforme cada tabela do Anuário; categorias podem se sobrepor e não devem ser somadas.</p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {crimesUf.categorias.map((cat, i) => {
+                  const valor = (crimesUf.dados as Record<string, (number | null)[]>)[ufOficial]?.[i];
+                  return <div key={cat.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{cat.id.replaceAll("_", " ")}</p><p className="text-lg font-semibold">{valor == null ? "Não informado" : nf(valor)}</p><p className="text-xs text-muted-foreground">Tabela {cat.tabela}</p></div>;
+                })}
+              </div>
+            </div>
+            {ufOficial === "Brasil" && <div className="rounded-lg border p-4">
+              <h3 className="mb-3 text-base font-semibold">Série histórica nacional de MVI (2012–2025)</h3>
+              <div className="h-64 w-full"><ResponsiveContainer width="100%" height="100%">
+                <LineChart data={historicoMvi.serie}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="ano" /><YAxis tickFormatter={nf} width={65} /><Tooltip formatter={(value) => nf(Number(value))} /><Line type="monotone" dataKey="total" name="Vítimas" stroke="#334155" strokeWidth={2} dot={false} /></LineChart>
+              </ResponsiveContainer></div>
+            </div>}
+            <p className="text-xs text-muted-foreground">Fonte: Anuário Brasileiro de Segurança Pública 2026, tabelas 02, 11, 12, 17, 21, 24, 29 e 31. Dados estaduais/nacionais, não municipais. A pesquisa municipal abaixo depende de fontes próprias.</p>
             <a href="/fontes-oficiais" className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Ver todas as categorias oficiais</a>
           </CardContent>
         </Card>
