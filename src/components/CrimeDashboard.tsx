@@ -43,10 +43,9 @@ import crimesUf from "@/data/crimes-uf-2025.json";
 import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
 import municipiosParana from "@/data/municipios-parana-2025.json";
 
-type Period = "semana" | "mes" | "ano";
+type Period = "mes" | "ano";
 
 const PERIOD_LABEL: Record<Period, string> = {
-  semana: "esta semana",
   mes: "este mês",
   ano: "este ano",
 };
@@ -78,7 +77,6 @@ export function CrimeDashboard() {
   const [ufOficial, setUfOficial] = useState("São Paulo");
   const [buscaUf, setBuscaUf] = useState("");
   const [mesPesquisa, setMesPesquisa] = useState("todos");
-  const [semanaPesquisa, setSemanaPesquisa] = useState("1");
   const [anoGrafico, setAnoGrafico] = useState<"2024" | "2025" | "2026">("2025");
   const [period, setPeriod] = useState<Period>("ano");
   const [consultarCidade, setConsultarCidade] = useState(false);
@@ -176,7 +174,7 @@ export function CrimeDashboard() {
             </label>
             <label className="text-sm font-semibold">Período
               <select value={period} onChange={e=>setPeriod(e.target.value as Period)} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
-                <option value="ano">Ano</option><option value="mes">Mês</option><option value="semana">Semana</option>
+                <option value="ano">Ano</option><option value="mes">Mês</option>
               </select>
             </label>
             {period !== "ano" && <label className="text-sm font-semibold">Mês
@@ -185,14 +183,10 @@ export function CrimeDashboard() {
                 {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((nome,i)=><option key={nome} value={String(i+1)}>{nome}</option>)}
               </select>
             </label>}
-            {period === "semana" && <label className="text-sm font-semibold">Semana do mês
-              <select value={semanaPesquisa} onChange={e=>setSemanaPesquisa(e.target.value)} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
-                {[1,2,3,4,5].map(n=><option key={n} value={String(n)}>Semana {n}</option>)}
-              </select>
-            </label>}
+
           </div>
-          <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">Local: <strong>{city || ufOficial}</strong> · {anoGrafico} · {period === "ano" ? "ano inteiro" : period === "mes" ? "mês" : "semana"}</p>
-          {period !== "ano" && <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Ainda não há séries mensais ou semanais importadas e validadas. Os gráficos históricos anuais abaixo são apenas referência e não correspondem ao período selecionado.</p>}
+          <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">Local: <strong>{city || ufOficial}</strong> · {anoGrafico} · {period === "ano" ? "ano inteiro" : "mês"}</p>
+          {period !== "ano" && <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Ainda não há séries mensais importadas e validadas. Os gráficos históricos anuais abaixo são apenas referência e não correspondem ao período selecionado.</p>}
         </section>
 
 
@@ -204,7 +198,7 @@ export function CrimeDashboard() {
         </div>
         <div className="hidden print:block">
           <h2 className="text-xl font-bold">Indicador Brasil — Relatório de Segurança Pública</h2>
-          <p className="text-sm">Local: {city || ufOficial} · Estado: {ufOficial} · Ano: {anoGrafico} · Período: {period === "ano" ? "anual" : period === "mes" ? "mensal" : "semanal"}{period !== "ano" && mesPesquisa !== "todos" ? " · Mês: " + mesPesquisa : ""}{period === "semana" ? " · Semana: " + semanaPesquisa : ""}</p>
+          <p className="text-sm">Local: {city || ufOficial} · Estado: {ufOficial} · Ano: {anoGrafico} · Período: {period === "ano" ? "anual" : "mensal"}{period !== "ano" && mesPesquisa !== "todos" ? " · Mês: " + mesPesquisa : ""}</p>
           <p className="text-xs">Gerado em: {new Date().toLocaleDateString("pt-BR")}. Dados somente para períodos com cobertura documentada.</p>
         </div>
         {/* Aviso de transparência */}
@@ -373,12 +367,12 @@ export function CrimeDashboard() {
             </div>}
             </> : <div className="space-y-4">
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p className="font-semibold">Dados {period === "mes" ? "mensais" : "semanais"} indisponíveis para {city || ufOficial} — {anoGrafico}{mesPesquisa !== "todos" ? " / mês " + mesPesquisa : ""}{period === "semana" ? " / semana " + semanaPesquisa : ""}.</p>
-                <p className="mt-1">Não há registros oficiais por esse intervalo importados no sistema. Os gráficos a seguir são referências ANUAIS de 2024 e 2025, não representam o mês ou a semana pesquisados.</p>
+                <p className="font-semibold">Dados mensais indisponíveis para {city || ufOficial} — {anoGrafico}{mesPesquisa !== "todos" ? " / mês " + mesPesquisa : ""}.</p>
+                <p className="mt-1">Não há registros oficiais por esse intervalo importados no sistema. Os gráficos a seguir são referências ANUAIS de 2024 e 2025, não representam o mês pesquisado.</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <h3 className="text-base font-bold text-slate-900">Referência histórica anual — mortes violentas intencionais</h3>
-                <p className="mt-1 text-xs text-slate-500">{ufOficial} · totais anuais de 2024 e 2025 · não correspondem ao filtro mensal/semanal</p>
+                <p className="mt-1 text-xs text-slate-500">{ufOficial} · totais anuais de 2024 e 2025 · não correspondem ao filtro mensal</p>
                 <div className="mt-4 h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={[{ ano: "2024", total: (oficiais.dados as Record<string, number[]>)[ufOficial][0] }, { ano: "2025", total: (oficiais.dados as Record<string, number[]>)[ufOficial][1] }]} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
@@ -516,7 +510,7 @@ export function CrimeDashboard() {
                   Evolução das ocorrências
                 </CardTitle>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {city} • visão {period === "semana" ? "semanal" : period === "mes" ? "mensal" : "anual"}
+                  {city} • visão {period === "mes" ? "mensal" : "anual"}
                 </p>
               </div>
               <Badge variant="secondary" className="gap-1 bg-secondary text-navy">
