@@ -12,6 +12,14 @@ from openpyxl import load_workbook
 if len(sys.argv) != 2:
     raise SystemExit("Uso: python scripts/inspecionar_sinesp.py arquivo.zip")
 arquivo = Path(sys.argv[1])
+if arquivo.suffix.lower() == ".xlsx":
+    wb = load_workbook(arquivo, read_only=True, data_only=True)
+    for aba in wb:
+        print("ABA:", aba.title, "LINHAS:", aba.max_row, "COLUNAS:", aba.max_column)
+        for linha in aba.iter_rows(min_row=1, max_row=min(aba.max_row, 8), values_only=True):
+            print(repr(linha[:20]))
+    wb.close()
+    raise SystemExit(0)
 if not zipfile.is_zipfile(arquivo):
     raise SystemExit("O arquivo fornecido nao e ZIP valido")
 
