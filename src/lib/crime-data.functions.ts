@@ -19,7 +19,7 @@ const SourceSchema = z.object({
   titulo: z.string(),
   url: z.string().url(),
   anoReferencia: z.number().int().min(1990).max(2100).optional(),
-  abrangencia: z.string().min(2),
+  abrangencia: z.string().min(2).optional(),
 });
 
 const CategorySchema = z.object({
