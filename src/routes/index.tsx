@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Dashboard executivo de indicadores de criminalidade por cidade, com filtros por semana, mês e ano.",
+          "Painel de indicadores oficiais de criminalidade por estado e município, com filtros por ano e mês.",
       },
     ],
   }),
