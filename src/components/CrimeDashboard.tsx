@@ -241,12 +241,13 @@ export function CrimeDashboard() {
           <CardHeader><CardTitle>Dados oficiais disponíveis — Brasil e estados</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">Consulta independente da pesquisa municipal. MVI do Anuário Brasileiro de Segurança Pública 2026; dados referentes a 2024 e 2025. Os números abaixo são do ESTADO selecionado, nunca da cidade.</p>
+            {period === "ano" ? <>
             <section className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-base font-bold text-slate-900">Indicadores de 2026</h3>
                 <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">Ano em andamento · dados parciais</span>
               </div>
-              {ufOficial === "São Paulo" ? (
+              {ufOficial === "São Paulo" && anoGrafico === "2026" ? (
                 <div className="mt-4 space-y-3">
                   <p className="text-sm text-slate-600">Estado de São Paulo · janeiro a agosto de 2026 · dados divulgados pela SSP-SP</p>
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -347,6 +348,7 @@ export function CrimeDashboard() {
                 <LineChart data={historicoMvi.serie}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="ano" /><YAxis tickFormatter={nf} width={65} /><Tooltip formatter={(value) => nf(Number(value))} /><Line type="monotone" dataKey="total" name="Vítimas" stroke="#334155" strokeWidth={2} dot={false} /></LineChart>
               </ResponsiveContainer></div>
             </div>}
+            </> : <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Nenhum gráfico mensal ou semanal verificado foi importado para este local e período. Selecione “Ano” para consultar os dados anuais disponíveis.</div>}
             <p className="text-xs text-muted-foreground">Fonte: Anuário Brasileiro de Segurança Pública 2026, tabelas 02, 11, 12, 17, 21, 24, 29 e 31. Dados estaduais/nacionais, não municipais. A pesquisa municipal abaixo depende de fontes próprias.</p>
             <a href="/fontes-oficiais" className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Ver todas as categorias oficiais</a>
           </CardContent>
