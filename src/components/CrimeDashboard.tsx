@@ -73,6 +73,8 @@ const COLORS = ["#0F172A", "#E11D48", "#10B981", "#F59E0B", "#6366F1", "#EC4899"
 export function CrimeDashboard() {
   const [city, setCity] = useState("São Paulo");
   const [municipioPR, setMunicipioPR] = useState("");
+  const [municipiosPR, setMunicipiosPR] = useState<string[]>([]);
+  const [erroMunicipiosPR, setErroMunicipiosPR] = useState(false);
   const [ufOficial, setUfOficial] = useState("São Paulo");
   const [buscaUf, setBuscaUf] = useState("");
   const [period, setPeriod] = useState<Period>("mes");
@@ -81,7 +83,7 @@ export function CrimeDashboard() {
   const [isMobile, setIsMobile] = useState(false);
   const selecionarCidade = (nome: string) => {
     setCity(nome);
-    setMunicipioPR(Object.prototype.hasOwnProperty.call(municipiosParana.dados, nome) ? nome : "");
+    setMunicipioPR(municipiosPR.includes(nome) || Object.prototype.hasOwnProperty.call(municipiosParana.dados, nome) ? nome : "");
     setConsultarCidade(false);
     setCidadeConsultada("");
     const estado = CAPITAL_UF[nome];
@@ -93,6 +95,15 @@ export function CrimeDashboard() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados/41/municipios?orderBy=nome", { signal: controller.signal })
+      .then(res => { if (!res.ok) throw new Error("IBGE indisponível"); return res.json(); })
+      .then((lista: { nome: string }[]) => setMunicipiosPR(lista.map(item => item.nome)))
+      .catch(() => { if (!controller.signal.aborted) setErroMunicipiosPR(true); });
+    return () => controller.abort();
   }, []);
 
   const callFn = useServerFn(fetchCrimeReport);
@@ -169,15 +180,16 @@ export function CrimeDashboard() {
         <Card className="mb-6 border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl">Pesquisa municipal — Paraná</CardTitle>
-            <p className="text-sm text-muted-foreground">Dados reais de municípios paranaenses, com fonte e período definidos. Importação inicial: mortes violentas de 2025.</p>
+            <p className="text-sm text-muted-foreground">Selecione qualquer município do Paraná. As estatísticas são exibidas somente quando os registros oficiais já foram importados e conferidos.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <label htmlFor="municipio-parana" className="block text-sm font-semibold">Selecionar município do Paraná</label>
             <select id="municipio-parana" value={municipioPR} onChange={e => { setMunicipioPR(e.target.value); if (e.target.value) { setCity(e.target.value); setUfOficial("Paraná"); setBuscaUf(""); setConsultarCidade(false); } }} className="h-12 w-full rounded-xl border border-emerald-200 bg-white px-3 text-sm shadow-sm">
-              <option value="">Escolha um município com dados importados</option>
-              {Object.keys(municipiosParana.dados).sort((a,b) => a.localeCompare(b, "pt-BR")).map(nome => <option key={nome} value={nome}>{nome}</option>)}
+              <option value="">Escolha um município do Paraná</option>
+              {(municipiosPR.length ? municipiosPR : Object.keys(municipiosParana.dados).sort((a,b) => a.localeCompare(b, "pt-BR"))).map(nome => <option key={nome} value={nome}>{nome}</option>)}
             </select>
-            {municipioPR ? (
+            {erroMunicipiosPR && <p className="text-xs text-amber-700">Não foi possível carregar a lista completa do IBGE; exibindo os municípios já cadastrados.</p>}
+            {municipioPR && Object.prototype.hasOwnProperty.call(municipiosParana.dados, municipioPR) ? (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-lg font-bold text-slate-900">{municipioPR} · Paraná</h3>
@@ -204,7 +216,7 @@ export function CrimeDashboard() {
                 <p className="text-xs text-slate-600">{municipiosParana.aviso}</p>
                 <a href={municipiosParana.url} target="_blank" rel="noopener noreferrer" className="inline-flex text-sm font-semibold text-emerald-800 underline underline-offset-4">Ver relatório oficial da SESP-PR · Tabela 01</a>
               </div>
-            ) : <p className="rounded-xl bg-white p-4 text-sm text-slate-600">Selecione uma cidade acima para visualizar os indicadores municipais já importados. Os demais municípios serão incluídos à medida que suas tabelas forem validadas.</p>}
+            ) : municipioPR ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2"><p className="text-sm font-semibold text-amber-900">Ainda não há indicadores municipais validados para {municipioPR}.</p><p className="text-sm text-amber-800">A cidade está disponível na pesquisa, mas não exibimos números de outro município ou do estado como se fossem locais. Consulte os relatórios da SESP-PR enquanto a importação é ampliada.</p><a className="text-sm font-semibold text-amber-900 underline" href="https://www.seguranca.pr.gov.br/CAPE/Estatisticas" target="_blank" rel="noopener noreferrer">Consultar estatísticas oficiais da SESP-PR</a></div> : <p className="rounded-xl bg-white p-4 text-sm text-slate-600">Escolha um município. A lista completa é carregada do IBGE; indicadores serão exibidos para os municípios já validados.</p>}
           </CardContent>
         </Card>
 
