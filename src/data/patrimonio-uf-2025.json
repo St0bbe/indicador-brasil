@@ -1,0 +1,201 @@
+{
+  "fonte": "20º Anuário Brasileiro de Segurança Pública 2026",
+  "anoReferencia": 2025,
+  "abrangencia": "Brasil e unidades da federação",
+  "tabelas": [
+    {
+      "numero": 11,
+      "pagina": 93,
+      "categorias": [
+        "roubo_veiculos",
+        "furto_veiculos"
+      ]
+    },
+    {
+      "numero": 12,
+      "pagina": 95,
+      "categorias": [
+        "roubo_celulares",
+        "furto_celulares"
+      ]
+    }
+  ],
+  "campos": [
+    "roubo_veiculos",
+    "furto_veiculos",
+    "roubo_celulares",
+    "furto_celulares"
+  ],
+  "unidade": "registros absolutos",
+  "url": "https://publicacoes.forumseguranca.org.br/handle/fbsp/305",
+  "dados": {
+    "Brasil": [
+      104491,
+      203949,
+      308723,
+      483561
+    ],
+    "Acre": [
+      473,
+      731,
+      1517,
+      1615
+    ],
+    "Alagoas": [
+      1269,
+      1563,
+      3678,
+      4459
+    ],
+    "Amapá": [
+      87,
+      297,
+      2071,
+      2860
+    ],
+    "Amazonas": [
+      587,
+      1732,
+      15592,
+      13445
+    ],
+    "Bahia": [
+      9479,
+      7236,
+      29177,
+      25386
+    ],
+    "Ceará": [
+      5140,
+      5075,
+      15281,
+      15316
+    ],
+    "Distrito Federal": [
+      861,
+      2959,
+      6709,
+      13582
+    ],
+    "Espírito Santo": [
+      1419,
+      3705,
+      8116,
+      8023
+    ],
+    "Goiás": [
+      507,
+      3176,
+      4295,
+      12049
+    ],
+    "Maranhão": [
+      3338,
+      3608,
+      14126,
+      14006
+    ],
+    "Mato Grosso": [
+      524,
+      1831,
+      1939,
+      6200
+    ],
+    "Mato Grosso do Sul": [
+      283,
+      2307,
+      1339,
+      4325
+    ],
+    "Minas Gerais": [
+      3549,
+      24062,
+      5936,
+      32999
+    ],
+    "Pará": [
+      1192,
+      2945,
+      20836,
+      25852
+    ],
+    "Paraíba": [
+      4392,
+      1867,
+      1598,
+      4799
+    ],
+    "Paraná": [
+      1599,
+      9020,
+      7826,
+      22412
+    ],
+    "Pernambuco": [
+      11749,
+      6955,
+      21690,
+      19112
+    ],
+    "Piauí": [
+      2843,
+      1138,
+      6621,
+      5396
+    ],
+    "Rio de Janeiro": [
+      25235,
+      17490,
+      25581,
+      46606
+    ],
+    "Rio Grande do Norte": [
+      1391,
+      2142,
+      5490,
+      6650
+    ],
+    "Rio Grande do Sul": [
+      1790,
+      6303,
+      2438,
+      12025
+    ],
+    "Rondônia": [
+      368,
+      1544,
+      3850,
+      4440
+    ],
+    "Roraima": [
+      139,
+      658,
+      721,
+      1692
+    ],
+    "Santa Catarina": [
+      664,
+      6208,
+      2459,
+      15663
+    ],
+    "São Paulo": [
+      25024,
+      87334,
+      96955,
+      157492
+    ],
+    "Sergipe": [
+      355,
+      823,
+      2160,
+      4324
+    ],
+    "Tocantins": [
+      234,
+      1240,
+      722,
+      2833
+    ]
+  }
+}
