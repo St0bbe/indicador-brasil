@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import oficiais from "@/data/indicadores-oficiais-2026.json";
+import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
 
 export const Route = createFileRoute("/fontes-oficiais")({
   component: FontesOficiais,
@@ -46,6 +47,18 @@ function FontesOficiais() {
           <tr className="border-b"><td className="p-2">MVI por 100 mil habitantes</td><td className="p-2">{nf(valores[2],1)}</td><td className="p-2">{nf(valores[3],1)}</td><td className="p-2">Anuário, tabela 02</td></tr>
           <tr><td className="p-2">Homicídios registrados por 100 mil habitantes</td><td className="p-2">{nf(valores[4],1)}</td><td className="p-2">Não disponível nesta edição</td><td className="p-2">Atlas, tabela 2.1</td></tr>
         </tbody></table></div>
+      </section>
+      <section className="rounded-lg border p-5 space-y-3">
+        <h2 className="text-xl font-semibold">Série histórica nacional — MVI (2012–2025)</h2>
+        <p className="text-sm text-muted-foreground">Tabela 02 do Anuário 2026. Esta série é exclusivamente nacional e não muda conforme o estado selecionado.</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {historicoMvi.serie.map(p => (
+            <div key={p.ano} className="rounded-md border p-3">
+              <div className="text-xs text-muted-foreground">{p.ano}</div>
+              <div className="font-semibold">{nf(p.total)}</div>
+            </div>
+          ))}
+        </div>
       </section>
       <section className="space-y-2 text-sm text-muted-foreground">
         <p><strong>Metodologia:</strong> MVI são indicadores policiais compilados pelo FBSP; homicídios registrados do Atlas são baseados no SIM/MS. Não devem ser somados nem comparados como se fossem o mesmo indicador. Os anos indicam o período dos dados, não o ano de publicação.</p>
