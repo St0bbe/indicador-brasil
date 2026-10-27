@@ -175,6 +175,34 @@ export function CrimeDashboard() {
               {Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).map(nome => <option key={nome} value={nome}>{nome}</option>)}
             </select>
 
+            <section className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-base font-bold text-slate-900">Indicadores de 2026</h3>
+                <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800">Ano em andamento · dados parciais</span>
+              </div>
+              {ufOficial === "São Paulo" ? (
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm text-slate-600">Estado de São Paulo · janeiro a agosto de 2026 · dados divulgados pela SSP-SP</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-white bg-white/90 p-4">
+                      <p className="text-xs font-semibold text-slate-500">Vítimas de homicídio doloso (jan–ago)</p>
+                      <p className="mt-1 text-3xl font-extrabold tabular-nums text-indigo-900">1.549</p>
+                    </div>
+                    <div className="rounded-xl border border-white bg-white/90 p-4">
+                      <p className="text-xs font-semibold text-slate-500">Ocorrências de homicídio doloso (jan–ago)</p>
+                      <p className="mt-1 text-3xl font-extrabold tabular-nums text-sky-800">1.491</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600">Homicídio doloso não é o mesmo indicador que Mortes Violentas Intencionais (MVI). Estes valores são parciais, não representam o ano completo nem apenas a cidade de São Paulo.</p>
+                  <a className="inline-flex text-sm font-semibold text-indigo-700 underline underline-offset-4" href="https://www.geo.ssp.sp.gov.br/estatistica/dados-mensais" target="_blank" rel="noopener noreferrer">Consultar publicação oficial da SSP-SP</a>
+                </div>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <p className="text-sm text-slate-600">Ainda não importamos um conjunto validado de indicadores parciais de 2026 para {ufOficial}. Os dados de 2024 e 2025 abaixo permanecem disponíveis.</p>
+                  <a className="inline-flex text-sm font-semibold text-indigo-700 underline underline-offset-4" href="https://dados.mj.gov.br/dataset/sistema-nacional-de-estatisticas-de-seguranca-publica" target="_blank" rel="noopener noreferrer">Consultar a base oficial Sinesp por estado e município</a>
+                </div>
+              )}
+            </section>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 { titulo: "MVI em 2024", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][0]), estilo: "border-slate-200 bg-gradient-to-br from-slate-50 to-white text-slate-900" },
