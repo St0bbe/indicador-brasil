@@ -35,7 +35,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { CityCombobox } from "@/components/CityCombobox";
 import { fetchCrimeReport } from "@/lib/crime-data.functions";
 import oficiais from "@/data/indicadores-oficiais-2026.json";
 import patrimonioUf from "@/data/patrimonio-uf-2025.json";
@@ -77,6 +76,8 @@ export function CrimeDashboard() {
   const [erroMunicipiosPR, setErroMunicipiosPR] = useState(false);
   const [ufOficial, setUfOficial] = useState("São Paulo");
   const [buscaUf, setBuscaUf] = useState("");
+  const [mesPesquisa, setMesPesquisa] = useState("todos");
+  const [semanaPesquisa, setSemanaPesquisa] = useState("1");
   const [anoGrafico, setAnoGrafico] = useState<"2024" | "2025" | "2026">("2025");
   const [period, setPeriod] = useState<Period>("mes");
   const [consultarCidade, setConsultarCidade] = useState(false);
@@ -144,29 +145,49 @@ export function CrimeDashboard() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full sm:w-auto">
-            <div className="w-full sm:w-64">
-              <CityCombobox value={city} onChange={selecionarCidade} />
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="flex-1 sm:w-auto">
-                <TabsList className="bg-card shadow-sm w-full grid grid-cols-3 sm:flex sm:w-auto">
-                  <TabsTrigger value="semana">Semana</TabsTrigger>
-                  <TabsTrigger value="mes">Mês</TabsTrigger>
-                  <TabsTrigger value="ano">Ano</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors"
-                title="Recarregar dados (ignorar cache)"
-              >
-                <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-          </div>
         </header>
+
+        <section className="mb-6 rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-bold text-slate-900">Pesquisar por estado, cidade e período</h2>
+          <p className="mt-1 mb-4 text-sm text-slate-500">Uma pesquisa única para os indicadores oficiais disponíveis.</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="text-sm font-semibold">Estado
+              <select value={ufOficial} onChange={e => {setUfOficial(e.target.value);setMunicipioPR("");setCity("");setConsultarCidade(false);}} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
+                {Object.keys(oficiais.dados).sort((a,b)=>a.localeCompare(b,"pt-BR")).map(nome=><option key={nome} value={nome}>{nome}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-semibold">Cidade (opcional)
+              {ufOficial === "Paraná" ? <select value={municipioPR} onChange={e=>{setMunicipioPR(e.target.value);setCity(e.target.value);setConsultarCidade(false);}} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
+                <option value="">Todas / dados estaduais</option>
+                {(municipiosPR.length ? municipiosPR : Object.keys(municipiosParana.dados)).sort((a,b)=>a.localeCompare(b,"pt-BR")).map(nome=><option key={nome} value={nome}>{nome}</option>)}
+              </select> : <input value={city} onChange={e=>{setCity(e.target.value);setConsultarCidade(false);}} placeholder="Digite a cidade" className="mt-2 h-11 w-full rounded-xl border bg-white px-3" />}
+            </label>
+            <label className="text-sm font-semibold">Ano
+              <select value={anoGrafico} onChange={e=>setAnoGrafico(e.target.value as "2024"|"2025"|"2026")} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
+                <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026 (parcial)</option>
+              </select>
+            </label>
+            <label className="text-sm font-semibold">Período
+              <select value={period} onChange={e=>setPeriod(e.target.value as Period)} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
+                <option value="ano">Ano</option><option value="mes">Mês</option><option value="semana">Semana</option>
+              </select>
+            </label>
+            {period !== "ano" && <label className="text-sm font-semibold">Mês
+              <select value={mesPesquisa} onChange={e=>setMesPesquisa(e.target.value)} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
+                <option value="todos">Selecione o mês</option>
+                {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((nome,i)=><option key={nome} value={String(i+1)}>{nome}</option>)}
+              </select>
+            </label>}
+            {period === "semana" && <label className="text-sm font-semibold">Semana do mês
+              <select value={semanaPesquisa} onChange={e=>setSemanaPesquisa(e.target.value)} className="mt-2 h-11 w-full rounded-xl border bg-white px-3">
+                {[1,2,3,4,5].map(n=><option key={n} value={String(n)}>Semana {n}</option>)}
+              </select>
+            </label>}
+          </div>
+          <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">Local: <strong>{city || ufOficial}</strong> · {anoGrafico} · {period === "ano" ? "ano inteiro" : period === "mes" ? "mês" : "semana"}</p>
+          {period !== "ano" && <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Ainda não há séries mensais ou semanais importadas e validadas. Os totais anuais abaixo são apenas referência e não correspondem ao período selecionado.</p>}
+        </section>
+
 
         {/* Aviso de transparência */}
         <Card className="mb-6 border-navy/20 bg-navy/5">
@@ -184,13 +205,8 @@ export function CrimeDashboard() {
             <p className="text-sm text-muted-foreground">Selecione qualquer município do Paraná. As estatísticas são exibidas somente quando os registros oficiais já foram importados e conferidos.</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <label htmlFor="municipio-parana" className="block text-sm font-semibold">Selecionar município do Paraná</label>
-            <select id="municipio-parana" value={municipioPR} onChange={e => { setMunicipioPR(e.target.value); if (e.target.value) { setCity(e.target.value); setUfOficial("Paraná"); setBuscaUf(""); setConsultarCidade(false); } }} className="h-12 w-full rounded-xl border border-emerald-200 bg-white px-3 text-sm shadow-sm">
-              <option value="">Escolha um município do Paraná</option>
-              {(municipiosPR.length ? municipiosPR : Object.keys(municipiosParana.dados).sort((a,b) => a.localeCompare(b, "pt-BR"))).map(nome => <option key={nome} value={nome}>{nome}</option>)}
-            </select>
             {erroMunicipiosPR && <p className="text-xs text-amber-700">Não foi possível carregar a lista completa do IBGE; exibindo os municípios já cadastrados.</p>}
-            {municipioPR && Object.prototype.hasOwnProperty.call(municipiosParana.dados, municipioPR) ? (
+            {municipioPR && anoGrafico === "2025" && period === "ano" && Object.prototype.hasOwnProperty.call(municipiosParana.dados, municipioPR) ? (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-lg font-bold text-slate-900">{municipioPR} · Paraná</h3>
@@ -217,7 +233,7 @@ export function CrimeDashboard() {
                 <p className="text-xs text-slate-600">{municipiosParana.aviso}</p>
                 <a href={municipiosParana.url} target="_blank" rel="noopener noreferrer" className="inline-flex text-sm font-semibold text-emerald-800 underline underline-offset-4">Ver relatório oficial da SESP-PR · Tabela 01</a>
               </div>
-            ) : municipioPR ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2"><p className="text-sm font-semibold text-amber-900">Ainda não há indicadores municipais validados para {municipioPR}.</p><p className="text-sm text-amber-800">A cidade está disponível na pesquisa, mas não exibimos números de outro município ou do estado como se fossem locais. Consulte os relatórios da SESP-PR enquanto a importação é ampliada.</p><a className="text-sm font-semibold text-amber-900 underline" href="https://www.seguranca.pr.gov.br/CAPE/Estatisticas" target="_blank" rel="noopener noreferrer">Consultar estatísticas oficiais da SESP-PR</a></div> : <p className="rounded-xl bg-white p-4 text-sm text-slate-600">Escolha um município. A lista completa é carregada do IBGE; indicadores serão exibidos para os municípios já validados.</p>}
+            ) : municipioPR ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2"><p className="text-sm font-semibold text-amber-900">Ainda não há indicadores municipais validados para {municipioPR} no ano e período selecionados.</p><p className="text-sm text-amber-800">A cidade está disponível na pesquisa, mas não exibimos números de outro município ou do estado como se fossem locais. Consulte os relatórios da SESP-PR enquanto a importação é ampliada.</p><a className="text-sm font-semibold text-amber-900 underline" href="https://www.seguranca.pr.gov.br/CAPE/Estatisticas" target="_blank" rel="noopener noreferrer">Consultar estatísticas oficiais da SESP-PR</a></div> : <p className="rounded-xl bg-white p-4 text-sm text-slate-600">Escolha um município. A lista completa é carregada do IBGE; indicadores serão exibidos para os municípios já validados.</p>}
           </CardContent>
         </Card>
 
@@ -225,14 +241,6 @@ export function CrimeDashboard() {
           <CardHeader><CardTitle>Dados oficiais disponíveis — Brasil e estados</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">Consulta independente da pesquisa municipal. MVI do Anuário Brasileiro de Segurança Pública 2026; dados referentes a 2024 e 2025. Os números abaixo são do ESTADO selecionado, nunca da cidade.</p>
-            <p className="text-sm font-medium" role="status">Cidade pesquisada: {city}. {CAPITAL_UF[city] ? `Exibindo contexto estadual de ${ufOficial}.` : "Ainda não temos estatísticas municipais verificadas para esta cidade. Selecione o estado para ver o contexto estadual."}</p>
-            <label htmlFor="busca-estado" className="block text-sm font-medium">Pesquisar estado</label>
-            <input id="busca-estado" type="search" value={buscaUf} onChange={e => setBuscaUf(e.target.value)} placeholder="Digite o estado…" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" />
-            <select aria-label="Escolher estado" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" value={ufOficial} onChange={e => setUfOficial(e.target.value)}>
-              {!Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).includes(ufOficial) && <option value={ufOficial}>{ufOficial}</option>}
-              {Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).map(nome => <option key={nome} value={nome}>{nome}</option>)}
-            </select>
-
             <section className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-base font-bold text-slate-900">Indicadores de 2026</h3>
@@ -261,17 +269,6 @@ export function CrimeDashboard() {
                 </div>
               )}
             </section>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div>
-                <label htmlFor="ano-graficos" className="block text-sm font-bold text-slate-900">Pesquisar gráficos por ano</label>
-                <p className="mt-1 text-xs text-slate-500">O ano selecionado controla os gráficos abaixo; períodos sem dados são sinalizados.</p>
-              </div>
-              <select id="ano-graficos" value={anoGrafico} onChange={e => setAnoGrafico(e.target.value as "2024" | "2025" | "2026")} className="h-11 min-w-36 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm">
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026 (parcial)</option>
-              </select>
-            </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 { titulo: "MVI em 2024", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][0]), estilo: "border-slate-200 bg-gradient-to-br from-slate-50 to-white text-slate-900" },
