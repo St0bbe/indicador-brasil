@@ -150,7 +150,7 @@ export function CrimeDashboard() {
             <h2 className="text-2xl font-bold text-navy mb-2">Sem dados disponíveis</h2>
             <p className="text-muted-foreground max-w-md mb-6">
               Não conseguimos coletar fontes confiáveis sobre a criminalidade em <strong>{city}</strong> no momento.
-              Tente novamente em alguns instantes ou escolha outra cidade.
+              Tente novamente em alguns instantes ou escolha outra cidade. Enquanto isso, os indicadores oficiais por estado continuam disponíveis para consulta.
             </p>
             <button 
               onClick={() => refetch()} 
@@ -158,6 +158,7 @@ export function CrimeDashboard() {
             >
               Tentar novamente
             </button>
+            <a href="/fontes-oficiais" className="mt-4 inline-flex rounded-md border border-primary px-5 py-2.5 text-sm font-semibold text-primary hover:bg-accent">Consultar dados oficiais por estado</a>
           </div>
         )}
 
