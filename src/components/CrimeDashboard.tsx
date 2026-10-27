@@ -43,6 +43,20 @@ import crimesUf from "@/data/crimes-uf-2025.json";
 import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
 import municipiosParana from "@/data/municipios-parana-2025.json";
 
+type RegistroSinesp = { uf: string; municipio: string; evento: string; ano: number; mes: number; abrangencia: string; total: number };
+const basesSinesp = import.meta.glob<{ registros: RegistroSinesp[]; url_fonte: string }>(
+  "../data/sinesp-mensal-*.json", { eager: true, import: "default" }
+);
+const SIGLAS_UF: Record<string, string> = {
+  Acre:"AC", Alagoas:"AL", Amapá:"AP", Amazonas:"AM", Bahia:"BA", Ceará:"CE",
+  "Distrito Federal":"DF", "Espírito Santo":"ES", Goiás:"GO", Maranhão:"MA",
+  "Mato Grosso":"MT", "Mato Grosso do Sul":"MS", "Minas Gerais":"MG", Pará:"PA",
+  Paraíba:"PB", Paraná:"PR", Pernambuco:"PE", Piauí:"PI", "Rio de Janeiro":"RJ",
+  "Rio Grande do Norte":"RN", "Rio Grande do Sul":"RS", Rondônia:"RO", Roraima:"RR",
+  "Santa Catarina":"SC", "São Paulo":"SP", Sergipe:"SE", Tocantins:"TO"
+};
+const norm = (v: string) => v.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
+
 type Period = "mes" | "ano";
 
 const PERIOD_LABEL: Record<Period, string> = {
@@ -106,6 +120,20 @@ export function CrimeDashboard() {
       .catch(() => { if (!controller.signal.aborted) setErroMunicipiosPR(true); });
     return () => controller.abort();
   }, []);
+
+  const registrosMensais = Object.values(basesSinesp).flatMap(base => base.registros || []).filter(item =>
+    item.ano === Number(anoGrafico) &&
+    (ufOficial === "Brasil" || item.uf === SIGLAS_UF[ufOficial]) &&
+    (mesPesquisa === "todos" || item.mes === Number(mesPesquisa)) &&
+    (!city || norm(item.municipio) === norm(city)) &&
+    norm(item.abrangencia).includes("municipal")
+  );
+  const totaisMensais = Array.from(registrosMensais.reduce((map, item) => {
+    const chave = item.evento;
+    map.set(chave, (map.get(chave) || 0) + item.total);
+    return map;
+  }, new Map<string, number>()), ([evento, total]) => ({ evento, total }))
+    .sort((a, b) => b.total - a.total);
 
   const callFn = useServerFn(fetchCrimeReport);
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
@@ -367,7 +395,11 @@ export function CrimeDashboard() {
             </div>}
             </> : <div className="space-y-4">
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p className="font-semibold">Dados mensais indisponíveis para {city || ufOficial} — {anoGrafico}{mesPesquisa !== "todos" ? " / mês " + mesPesquisa : ""}.</p>
+                {totaisMensais.length > 0 ? <>
+                  <p className="font-semibold">Registros mensais oficiais disponíveis — {city || ufOficial}, {anoGrafico}</p>
+                  <p className="mt-1">Sinesp VDE · registros com abrangência municipal · métrica: total de ocorrências, por evento. Categorias não devem ser somadas indiscriminadamente.</p>
+                  <div className="mt-3 space-y-2">{totaisMensais.slice(0, 15).map(item => <div key={item.evento} className="flex justify-between gap-3 border-b pb-1"><span>{item.evento}</span><strong>{nf(item.total)}</strong></div>)}</div>
+                </> : <p className="font-semibold">Dados mensais indisponíveis para {city || ufOficial} — {anoGrafico}{mesPesquisa !== "todos" ? " / mês " + mesPesquisa : ""}.</p>}
                 <p className="mt-1">Não há registros oficiais por esse intervalo importados no sistema. Os gráficos a seguir são referências ANUAIS de 2024 e 2025, não representam o mês pesquisado.</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
