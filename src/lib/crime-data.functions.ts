@@ -39,6 +39,9 @@ export const CrimeReportSchema = z.object({
   fontesConsultadas: z.array(SourceSchema),
   resumo: z.string().optional(),
   isMocked: z.boolean().optional(),
+  anoReferencia: z.number().int().optional(),
+  abrangencia: z.string().optional(),
+  metodologia: z.string().optional(),
   updatedAt: z.number().optional(),
 });
 
@@ -241,9 +244,9 @@ async function extractWithAI(
 
   const currentYear = new Date().getFullYear();
   const system =
-    `Você é um analista de segurança pública brasileiro especialista em dados atuais de ${currentYear}. Extraia indicadores de criminalidade a partir dos textos fornecidos (notícias, portais de SSP, G1, R7, etc). Priorize SEMPRE os dados mais recentes (maio de 2026 ou o período mais próximo disponível). Responda SOMENTE chamando a função extrair_indicadores. Todos os textos devem estar em Português do Brasil. Quando os dados forem estimativas a partir das notícias, use números plausíveis e coerentes com as fontes.`;
+    `Você é um analista de segurança pública brasileiro. Fontes primárias prioritárias: Atlas da Violência (Ipea/FBSP) e Anuário Brasileiro de Segurança Pública (FBSP). Secretarias estaduais e bases governamentais oficiais podem complementar séries locais. Notícias servem SOMENTE como contexto, nunca como base para criar contagens, taxas ou variações. Não invente, estime, extrapole, distribua ou interpolе números. Não converta estatísticas estaduais em municipais. Use apenas valores explicitamente publicados e verificados nos textos coletados, com mesmo município/UF, período e indicador. Não confunda ano de publicação com ano de referência. Se não houver dados suficientes para calcular TODOS os indicadores solicitados com evidência documental, NÃO chame a função: responda com uma mensagem informando indisponibilidade. Responda em Português do Brasil.`;
 
-  const user = `Cidade: ${city}\nPeríodo de análise solicitado: ${PERIOD_PT[period]}\nAno de referência: ${currentYear}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
+  const user = `ATENÇÃO: apenas estatísticas explicitamente documentadas nas fontes oficiais; notícias são complementares. Não fabrique séries semanais/mensais a partir de totais anuais. Se não houver série oficial do período, não gere relatório. Cidade: ${city}\nPeríodo de análise solicitado: ${PERIOD_PT[period]}\nAno de referência: ${currentYear}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
 
   const body = {
     model: "google/gemini-2.5-flash",
@@ -362,6 +365,10 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     const timeFilter = data.period === "semana" ? "qdr:w" : data.period === "mes" ? "qdr:m" : "qdr:y";
 
     const queries = [
+      { query: `site:ipea.gov.br atlas da violência ${data.city} homicídios série histórica`, scrape: true },
+      { query: `site:forumseguranca.org.br anuário brasileiro segurança pública ${data.city} indicadores ${currentYear}`, scrape: true },
+      { query: `Atlas da Violência Ipea FBSP ${data.city} dados oficiais`, scrape: true },
+      { query: `Anuário Brasileiro de Segurança Pública FBSP ${data.city} dados oficiais`, scrape: true },
       { query: `criminalidade estatísticas ${data.city} ${periodLabel} ${currentYear}`, tbs: timeFilter, scrape: true },
       { query: `índices criminais ${data.city} ${currentYear} notícias recentes`, tbs: "qdr:m", scrape: true },
       { query: `segurança pública ${data.city} ocorrências policiais hoje`, tbs: "qdr:w", scrape: true },
@@ -378,34 +385,31 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
       try {
         const payload = await firecrawlSearch(q.query, q);
         results = uniqueResults([...results, ...collectResults(payload)]);
-        if (results.length >= 3) break;
+        // Continue pesquisando para reunir fontes primárias e contexto complementar.
       } catch (e) {
         lastErr = e;
       }
     }
 
     if (results.length === 0) {
-      console.warn(
-        `Firecrawl não retornou fontes para "${data.city}". Tentando fallback sources...`,
-        lastErr,
-      );
-      results = fallbackSources(data.city);
+      throw new Error("Não foram encontradas fontes documentais para o período solicitado.");
     }
-
-    if (results.length === 0) {
-      throw new Error(`Não foi possível encontrar fontes para a cidade de ${data.city}.`);
-    }
+    const official = results.filter(r => {
+      try { const host = new URL(r.url ?? "").hostname.toLowerCase(); return host === "ipea.gov.br" || host.endsWith(".ipea.gov.br") || host === "forumseguranca.org.br" || host.endsWith(".forumseguranca.org.br") || host.endsWith(".gov.br"); } catch { return false; }
+    });
+    if (official.length === 0) throw new Error("Nenhuma fonte oficial encontrada para fundamentar os índices.");
+    // Fontes oficiais primeiro; notícias apenas para contexto do relatório.
+    results = [...official, ...results.filter(r => !official.includes(r))];
 
     try {
       const report = await extractWithAI(data.city, data.period, results);
+      if (!report.fontesConsultadas.some(f => { try { const h = new URL(f.url).hostname.toLowerCase(); return h === "ipea.gov.br" || h.endsWith(".ipea.gov.br") || h === "forumseguranca.org.br" || h.endsWith(".forumseguranca.org.br") || h.endsWith(".gov.br"); } catch { return false; } })) throw new Error("Relatório sem referência oficial.");
+      if (report.isMocked || report.totalOcorrencias < 0 || report.serie.some(p => p.total < 0) || report.tiposFrequentes.some(p => p.total < 0)) throw new Error("Relatório inválido ou simulado.");
       report.updatedAt = Date.now();
       cache.set(key, { at: Date.now(), data: report });
       return report;
     } catch (e) {
-      console.error("Erro ao extrair dados com IA, usando dados simulados:", e);
-      const mockReport = generateMockData(data.city, data.period);
-      mockReport.updatedAt = Date.now();
-      cache.set(key, { at: Date.now(), data: mockReport });
-      return mockReport;
+      console.error("Falha na extração documental de índices criminais:", e);
+      throw new Error("Não foi possível validar indicadores criminais nas fontes oficiais para o período solicitado.");
     }
   });
