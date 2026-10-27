@@ -1,5 +1,7 @@
 name: Inspecionar base mensal Sinesp
 on:
+  schedule:
+    - cron: '17 8 5 * *'
   workflow_dispatch:
     inputs:
       ano:
@@ -15,16 +17,21 @@ jobs:
   inspecionar:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install openpyxl
+      - name: Definir ano da atualização
+        id: periodo
+        env:
+          ANO_MANUAL: ${{ inputs.ano }}
+        run: echo "ano=${ANO_MANUAL:-$(date -u +%Y)}" >> "$GITHUB_OUTPUT"
       - name: Baixar planilha anual do portal gov.br
         env:
-          ANO: ${{ inputs.ano }}
+          ANO: ${{ steps.periodo.outputs.ano }}
         run: |
           set -euo pipefail
           URL="https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/download/dnsp-base-de-dados/bancovde-${ANO}.xlsx/@@download/file"
@@ -41,8 +48,23 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: estrutura-sinesp-${{ inputs.ano }}
+          name: estrutura-sinesp-${{ steps.periodo.outputs.ano }}
           path: |
             estrutura-sinesp.txt
-            src/data/sinesp-mensal-${{ inputs.ano }}.json
+            src/data/sinesp-mensal-${{ steps.periodo.outputs.ano }}.json
           retention-days: 7
+      - name: Publicar base mensal validada na main
+        if: success()
+        env:
+          ANO: ${{ steps.periodo.outputs.ano }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "src/data/sinesp-mensal-${ANO}.json"
+          if git diff --cached --quiet; then
+            echo "Base sem alterações"
+          else
+            git commit -m "Atualizar base mensal Sinesp ${ANO}"
+            git push origin HEAD:main
+          fi
