@@ -1,0 +1,124 @@
+{
+  "ano": 2025,
+  "periodo": "Janeiro a dezembro de 2025",
+  "abrangencia": "Municípios do Paraná (importação inicial verificada)",
+  "fonte": "SESP-PR/CAPE, Relatório de mortes 2025, Tabela 01, página 3",
+  "url": "https://www.seguranca.pr.gov.br/sites/default/arquivos_restritos/files/documento/2026-03/relatorio_mortes_pr_jan_dez_2025_1.pdf",
+  "categorias": [
+    "Homicídio doloso (vítimas)",
+    "Latrocínio (vítimas)",
+    "Lesão corporal seguida de morte (vítimas)",
+    "Feminicídio (vítimas)"
+  ],
+  "aviso": "As categorias são publicadas separadamente. Feminicídio pode se sobrepor a homicídio doloso: não somar os totais. Não representa um índice agregado de criminalidade.",
+  "dados": {
+    "Curitiba": [
+      160,
+      7,
+      6,
+      12
+    ],
+    "Adrianópolis": [
+      0,
+      2,
+      0,
+      0
+    ],
+    "Agudos do Sul": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "Almirante Tamandaré": [
+      14,
+      0,
+      2,
+      1
+    ],
+    "Araucária": [
+      20,
+      1,
+      0,
+      1
+    ],
+    "Balsa Nova": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "Bocaiúva do Sul": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "Campina Grande do Sul": [
+      5,
+      0,
+      1,
+      0
+    ],
+    "Campo Largo": [
+      11,
+      4,
+      0,
+      1
+    ],
+    "Colombo": [
+      27,
+      1,
+      1,
+      1
+    ],
+    "Fazenda Rio Grande": [
+      15,
+      0,
+      2,
+      0
+    ],
+    "Pinhais": [
+      5,
+      0,
+      0,
+      0
+    ],
+    "Piraquara": [
+      20,
+      1,
+      0,
+      1
+    ],
+    "São José dos Pinhais": [
+      38,
+      0,
+      2,
+      3
+    ],
+    "Guaratuba": [
+      12,
+      0,
+      0,
+      0
+    ],
+    "Matinhos": [
+      10,
+      0,
+      1,
+      1
+    ],
+    "Paranaguá": [
+      43,
+      1,
+      2,
+      2
+    ],
+    "Ponta Grossa": [
+      33,
+      4,
+      1,
+      0
+    ]
+  }
+}
