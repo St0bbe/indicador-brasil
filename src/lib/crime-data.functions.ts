@@ -335,7 +335,7 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     try {
       const report = await extractWithAI(data.city, data.period, results);
       if (!report.fontesConsultadas.some(f => { try { const h = new URL(f.url).hostname.toLowerCase(); return h === "ipea.gov.br" || h.endsWith(".ipea.gov.br") || h === "forumseguranca.org.br" || h.endsWith(".forumseguranca.org.br") || h.endsWith(".gov.br"); } catch { return false; } })) throw new Error("Relatório sem referência oficial.");
-      if (report.abrangencia.toLocaleLowerCase("pt-BR").trim() !== data.city.toLocaleLowerCase("pt-BR").trim()) throw new Error("Abrangência não corresponde à cidade solicitada.");
+      if ((report.abrangencia ?? "").toLocaleLowerCase("pt-BR").trim() !== data.city.toLocaleLowerCase("pt-BR").trim()) throw new Error("Abrangência não corresponde à cidade solicitada.");
       if (report.serie.reduce((sum, p) => sum + p.total, 0) !== report.totalOcorrencias) throw new Error("Série não confere com o total.");
       if (report.tiposFrequentes.reduce((sum, p) => sum + p.total, 0) !== report.totalOcorrencias) throw new Error("Categorias não conferem com o total.");
       if (report.isMocked || report.totalOcorrencias < 0 || report.serie.some(p => p.total < 0) || report.tiposFrequentes.some(p => p.total < 0)) throw new Error("Relatório inválido ou simulado.");
