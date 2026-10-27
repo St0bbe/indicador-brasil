@@ -83,6 +83,7 @@ export function CrimeDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8"><a href="/fontes-oficiais" className="inline-flex rounded-md border px-4 py-2 text-sm font-semibold hover:bg-accent">Consultar dados oficiais do Atlas e Anuário por estado →</a></div>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
