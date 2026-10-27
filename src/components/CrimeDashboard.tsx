@@ -51,6 +51,19 @@ function nf(n: number) {
   return new Intl.NumberFormat("pt-BR").format(Math.round(n));
 }
 
+const CAPITAL_UF: Record<string, string> = {
+  "São Paulo": "São Paulo", "Rio de Janeiro": "Rio de Janeiro", "Brasília": "Distrito Federal",
+  "Salvador": "Bahia", "Fortaleza": "Ceará", "Belo Horizonte": "Minas Gerais",
+  "Manaus": "Amazonas", "Curitiba": "Paraná", "Recife": "Pernambuco",
+  "Porto Alegre": "Rio Grande do Sul", "Goiânia": "Goiás", "Belém": "Pará",
+  "São Luís": "Maranhão", "Maceió": "Alagoas", "Natal": "Rio Grande do Norte",
+  "Teresina": "Piauí", "João Pessoa": "Paraíba", "Aracaju": "Sergipe",
+  "Cuiabá": "Mato Grosso", "Campo Grande": "Mato Grosso do Sul",
+  "Florianópolis": "Santa Catarina", "Vitória": "Espírito Santo",
+  "Porto Velho": "Rondônia", "Rio Branco": "Acre", "Boa Vista": "Roraima",
+  "Palmas": "Tocantins", "Macapá": "Amapá",
+};
+
 const COLORS = ["#0F172A", "#E11D48", "#10B981", "#F59E0B", "#6366F1", "#EC4899", "#8B5CF6"];
 
 export function CrimeDashboard() {
@@ -61,6 +74,13 @@ export function CrimeDashboard() {
   const [consultarCidade, setConsultarCidade] = useState(false);
   const [cidadeConsultada, setCidadeConsultada] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const selecionarCidade = (nome: string) => {
+    setCity(nome);
+    setConsultarCidade(false);
+    setCidadeConsultada("");
+    const estado = CAPITAL_UF[nome];
+    if (estado) { setUfOficial(estado); setBuscaUf(""); }
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -108,7 +128,7 @@ export function CrimeDashboard() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full sm:w-auto">
             <div className="w-full sm:w-64">
-              <CityCombobox value={city} onChange={setCity} />
+              <CityCombobox value={city} onChange={selecionarCidade} />
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="flex-1 sm:w-auto">
@@ -143,7 +163,8 @@ export function CrimeDashboard() {
         <Card className="mb-6 border-border/70">
           <CardHeader><CardTitle>Dados oficiais disponíveis — Brasil e estados</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">Consulta independente da pesquisa municipal. MVI do Anuário Brasileiro de Segurança Pública 2026; dados referentes a 2024 e 2025.</p>
+            <p className="text-sm text-muted-foreground">Consulta independente da pesquisa municipal. MVI do Anuário Brasileiro de Segurança Pública 2026; dados referentes a 2024 e 2025. Os números abaixo são do ESTADO selecionado, nunca da cidade.</p>
+            <p className="text-sm font-medium" role="status">Cidade pesquisada: {city}. {CAPITAL_UF[city] ? `Exibindo contexto estadual de ${ufOficial}.` : "Ainda não temos estatísticas municipais verificadas para esta cidade. Selecione o estado para ver o contexto estadual."}</p>
             <label htmlFor="busca-estado" className="block text-sm font-medium">Pesquisar estado</label>
             <input id="busca-estado" type="search" value={buscaUf} onChange={e => setBuscaUf(e.target.value)} placeholder="Digite o estado…" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" />
             <select aria-label="Escolher estado" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" value={ufOficial} onChange={e => setUfOficial(e.target.value)}>
