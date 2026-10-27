@@ -41,6 +41,7 @@ import oficiais from "@/data/indicadores-oficiais-2026.json";
 import patrimonioUf from "@/data/patrimonio-uf-2025.json";
 import crimesUf from "@/data/crimes-uf-2025.json";
 import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
+import municipiosParana from "@/data/municipios-parana-2025.json";
 
 type Period = "semana" | "mes" | "ano";
 
@@ -71,6 +72,7 @@ const COLORS = ["#0F172A", "#E11D48", "#10B981", "#F59E0B", "#6366F1", "#EC4899"
 
 export function CrimeDashboard() {
   const [city, setCity] = useState("São Paulo");
+  const [municipioPR, setMunicipioPR] = useState("");
   const [ufOficial, setUfOficial] = useState("São Paulo");
   const [buscaUf, setBuscaUf] = useState("");
   const [period, setPeriod] = useState<Period>("mes");
@@ -79,6 +81,7 @@ export function CrimeDashboard() {
   const [isMobile, setIsMobile] = useState(false);
   const selecionarCidade = (nome: string) => {
     setCity(nome);
+    setMunicipioPR(Object.prototype.hasOwnProperty.call(municipiosParana.dados, nome) ? nome : "");
     setConsultarCidade(false);
     setCidadeConsultada("");
     const estado = CAPITAL_UF[nome];
@@ -160,6 +163,48 @@ export function CrimeDashboard() {
             <span>
               Os indicadores dependem de <strong>dados oficiais documentados</strong>, com prioridade para Atlas da Violência e Anuário Brasileiro de Segurança Pública. Notícias são apenas contexto. A disponibilidade varia conforme a cidade e o período; não são gerados números fictícios.
             </span>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6 border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl">Pesquisa municipal — Paraná</CardTitle>
+            <p className="text-sm text-muted-foreground">Dados reais de municípios paranaenses, com fonte e período definidos. Importação inicial: mortes violentas de 2025.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label htmlFor="municipio-parana" className="block text-sm font-semibold">Selecionar município do Paraná</label>
+            <select id="municipio-parana" value={municipioPR} onChange={e => { setMunicipioPR(e.target.value); if (e.target.value) { setCity(e.target.value); setUfOficial("Paraná"); setBuscaUf(""); setConsultarCidade(false); } }} className="h-12 w-full rounded-xl border border-emerald-200 bg-white px-3 text-sm shadow-sm">
+              <option value="">Escolha um município com dados importados</option>
+              {Object.keys(municipiosParana.dados).sort((a,b) => a.localeCompare(b, "pt-BR")).map(nome => <option key={nome} value={nome}>{nome}</option>)}
+            </select>
+            {municipioPR ? (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-lg font-bold text-slate-900">{municipioPR} · Paraná</h3>
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">2025 · dados municipais</span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {municipiosParana.categorias.map((nome, i) => <div key={nome} className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold text-slate-500">{nome}</p>
+                    <p className="mt-2 text-3xl font-extrabold tabular-nums text-slate-900">{nf((municipiosParana.dados as Record<string, number[]>)[municipioPR][i])}</p>
+                    <p className="mt-1 text-xs text-slate-500">Vítimas · jan–dez 2025</p>
+                  </div>)}
+                </div>
+                <div className="h-64 w-full rounded-2xl border border-emerald-100 bg-white p-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" margin={{ top: 8, right: 12, left: 12, bottom: 8 }} data={municipiosParana.categorias.map((nome, i) => ({ categoria: ["Homicídios", "Latrocínios", "Lesão seguida de morte", "Feminicídios"][i], total: (municipiosParana.dados as Record<string, number[]>)[municipioPR][i] }))}>
+                      <CartesianGrid horizontal={false} stroke="#e2e8f0" strokeDasharray="3 4" />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <YAxis type="category" dataKey="categoria" width={118} tick={{ fontSize: 10 }} />
+                      <Tooltip formatter={value => [nf(Number(value)), "Vítimas"]} />
+                      <Bar dataKey="total" fill="#059669" radius={[0, 6, 6, 0]} maxBarSize={30} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-slate-600">{municipiosParana.aviso}</p>
+                <a href={municipiosParana.url} target="_blank" rel="noopener noreferrer" className="inline-flex text-sm font-semibold text-emerald-800 underline underline-offset-4">Ver relatório oficial da SESP-PR · Tabela 01</a>
+              </div>
+            ) : <p className="rounded-xl bg-white p-4 text-sm text-slate-600">Selecione uma cidade acima para visualizar os indicadores municipais já importados. Os demais municípios serão incluídos à medida que suas tabelas forem validadas.</p>}
           </CardContent>
         </Card>
 
