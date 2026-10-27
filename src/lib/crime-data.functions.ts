@@ -17,12 +17,14 @@ const InputSchema = z.object({
 
 const SourceSchema = z.object({
   titulo: z.string(),
-  url: z.string(),
+  url: z.string().url(),
+  anoReferencia: z.number().int().min(1990).max(2100).optional(),
+  abrangencia: z.string().min(2),
 });
 
 const CategorySchema = z.object({
   categoria: z.string(),
-  total: z.number(),
+  total: z.number().int().nonnegative(),
 });
 
 const SeriePointSchema = z.object({
@@ -31,17 +33,17 @@ const SeriePointSchema = z.object({
 });
 
 export const CrimeReportSchema = z.object({
-  totalOcorrencias: z.number(),
-  variacao: z.number(), // % vs período anterior
+  totalOcorrencias: z.number().int().nonnegative(),
+  variacao: z.number().finite(), // % vs período anterior
   tipoMaisFrequente: z.string(),
   tiposFrequentes: z.array(CategorySchema),
   serie: z.array(SeriePointSchema),
-  fontesConsultadas: z.array(SourceSchema),
+  fontesConsultadas: z.array(SourceSchema).min(1),
   resumo: z.string().optional(),
   isMocked: z.boolean().optional(),
-  anoReferencia: z.number().int().optional(),
+  anoReferencia: z.number().int().min(1990).max(2100),
   abrangencia: z.string().optional(),
-  metodologia: z.string().optional(),
+  metodologia: z.string().min(20),
   updatedAt: z.number().optional(),
 });
 
@@ -169,7 +171,7 @@ async function extractWithAI(
   const system =
     `Você é um analista de segurança pública brasileiro. Fontes primárias prioritárias: Atlas da Violência (Ipea/FBSP) e Anuário Brasileiro de Segurança Pública (FBSP). Secretarias estaduais e bases governamentais oficiais podem complementar séries locais. Notícias servem SOMENTE como contexto, nunca como base para criar contagens, taxas ou variações. Não invente, estime, extrapole, distribua ou interpolе números. Não converta estatísticas estaduais em municipais. Use apenas valores explicitamente publicados e verificados nos textos coletados, com mesmo município/UF, período e indicador. Não confunda ano de publicação com ano de referência. Se não houver dados suficientes para calcular TODOS os indicadores solicitados com evidência documental, NÃO chame a função: responda com uma mensagem informando indisponibilidade. Responda em Português do Brasil.`;
 
-  const user = `ATENÇÃO: apenas estatísticas explicitamente documentadas nas fontes oficiais; notícias são complementares. Não fabrique séries semanais/mensais a partir de totais anuais. Se não houver série oficial do período, não gere relatório. Cidade: ${city}\nPeríodo de análise solicitado: ${PERIOD_PT[period]}\nAno de referência: ${currentYear}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
+  const user = `Preencha anoReferencia, abrangencia e metodologia com o que estiver explicitamente documentado. Exija mesma abrangência geográfica da cidade pesquisada; nunca use dados estaduais como municipais. A soma de tiposFrequentes e da série deve ser consistente com totalOcorrencias. ATENÇÃO: apenas estatísticas explicitamente documentadas nas fontes oficiais; notícias são complementares. Não fabrique séries semanais/mensais a partir de totais anuais. Se não houver série oficial do período, não gere relatório. Cidade: ${city}\nPeríodo de análise solicitado: ${PERIOD_PT[period]}\nAno de referência: ${currentYear}\n\nGere a série temporal exatamente assim: ${SERIE_HINT[period]}.\n\nIncluir no máximo 7 categorias em tiposFrequentes (ordenadas da maior para a menor).\nincluir todas as fontes consultadas com título e URL.\n\n===== TEXTOS COLETADOS =====\n${corpus}`;
 
   const body = {
     model: "google/gemini-2.5-flash",
@@ -229,6 +231,9 @@ async function extractWithAI(
                 },
               },
               resumo: { type: "string" },
+              anoReferencia: { type: "integer" },
+              abrangencia: { type: "string" },
+              metodologia: { type: "string" },
             },
             required: [
               "totalOcorrencias",
@@ -237,6 +242,9 @@ async function extractWithAI(
               "tiposFrequentes",
               "serie",
               "fontesConsultadas",
+              "anoReferencia",
+              "abrangencia",
+              "metodologia",
             ],
             additionalProperties: false,
           },
@@ -295,6 +303,7 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
       { query: `criminalidade estatísticas ${data.city} ${periodLabel} ${currentYear}`, tbs: timeFilter, scrape: true },
       { query: `índices criminais ${data.city} ${currentYear} notícias recentes`, tbs: "qdr:m", scrape: true },
       { query: `segurança pública ${data.city} ocorrências policiais hoje`, tbs: "qdr:w", scrape: true },
+      { query: `site:gov.br estatísticas criminais município ${data.city} dados oficiais ${currentYear}`, scrape: true },
       { query: `site:ssp.sp.gov.br estatística criminalidade ${data.city} ${currentYear}`, scrape: true },
       { query: `site:agenciasp.sp.gov.br índices criminais ${data.city} ${currentYear}`, scrape: true },
       { query: `site:g1.globo.com criminalidade ${data.city} ${currentYear}`, scrape: false, limit: 8 },
@@ -326,6 +335,9 @@ export const fetchCrimeReport = createServerFn({ method: "POST" })
     try {
       const report = await extractWithAI(data.city, data.period, results);
       if (!report.fontesConsultadas.some(f => { try { const h = new URL(f.url).hostname.toLowerCase(); return h === "ipea.gov.br" || h.endsWith(".ipea.gov.br") || h === "forumseguranca.org.br" || h.endsWith(".forumseguranca.org.br") || h.endsWith(".gov.br"); } catch { return false; } })) throw new Error("Relatório sem referência oficial.");
+      if (report.abrangencia.toLocaleLowerCase("pt-BR").trim() !== data.city.toLocaleLowerCase("pt-BR").trim()) throw new Error("Abrangência não corresponde à cidade solicitada.");
+      if (report.serie.reduce((sum, p) => sum + p.total, 0) !== report.totalOcorrencias) throw new Error("Série não confere com o total.");
+      if (report.tiposFrequentes.reduce((sum, p) => sum + p.total, 0) !== report.totalOcorrencias) throw new Error("Categorias não conferem com o total.");
       if (report.isMocked || report.totalOcorrencias < 0 || report.serie.some(p => p.total < 0) || report.tiposFrequentes.some(p => p.total < 0)) throw new Error("Relatório inválido ou simulado.");
       report.updatedAt = Date.now();
       cache.set(key, { at: Date.now(), data: report });
