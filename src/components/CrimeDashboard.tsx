@@ -59,6 +59,7 @@ export function CrimeDashboard() {
   const [buscaUf, setBuscaUf] = useState("");
   const [period, setPeriod] = useState<Period>("mes");
   const [consultarCidade, setConsultarCidade] = useState(false);
+  const [cidadeConsultada, setCidadeConsultada] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -70,16 +71,17 @@ export function CrimeDashboard() {
 
   const callFn = useServerFn(fetchCrimeReport);
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ["crime-report", city, period],
-    enabled: consultarCidade,
-    queryFn: () => callFn({ data: { city, period } }),
+    queryKey: ["crime-report", cidadeConsultada, period],
+    enabled: consultarCidade && cidadeConsultada.length >= 2,
+    queryFn: () => callFn({ data: { city: cidadeConsultada, period } }),
     staleTime: 60 * 60 * 1000,
     retry: 0,
   });
 
   const handleRefresh = async () => {
     if (isFetching) return;
-    await callFn({ data: { city, period, forceRefresh: true } });
+    if (!consultarCidade || !cidadeConsultada) return;
+    await callFn({ data: { city: cidadeConsultada, period, forceRefresh: true } });
     refetch();
   };
 
@@ -161,7 +163,7 @@ export function CrimeDashboard() {
           <CardContent className="space-y-3 py-4">
             <p className="text-sm font-semibold">Consulta municipal experimental</p>
             <p className="text-sm text-muted-foreground">Os dados oficiais por estado já aparecem acima, sem depender de serviços externos. Para tentar pesquisar estatísticas específicas de {city}, use o botão abaixo. Algumas cidades e períodos não possuem dados públicos compatíveis, e a consulta pode falhar.</p>
-            <button type="button" onClick={() => setConsultarCidade(true)} disabled={loading} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">Pesquisar dados municipais de {city}</button>
+            <button type="button" onClick={() => { setCidadeConsultada(city); setConsultarCidade(true); }} disabled={loading} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">Pesquisar dados municipais de {city}</button>
           </CardContent>
         </Card>
 
@@ -181,8 +183,8 @@ export function CrimeDashboard() {
             </div>
             <h2 className="text-2xl font-bold text-navy mb-2">Sem dados disponíveis</h2>
             <p className="text-muted-foreground max-w-md mb-6">
-              Não conseguimos coletar fontes confiáveis sobre a criminalidade em <strong>{city}</strong> no momento.
-              Tente novamente em alguns instantes ou escolha outra cidade. Enquanto isso, os indicadores oficiais por estado continuam disponíveis para consulta.
+              Não foi possível validar um relatório municipal completo para <strong>{cidadeConsultada}</strong> no período selecionado.
+              Isso pode ocorrer por ausência de estatísticas municipais oficiais, falha no serviço de busca ou indisponibilidade da IA. Não usamos dados estaduais como se fossem municipais. Consulte os indicadores oficiais por estado acima enquanto a integração municipal não está disponível.
             </p>
             <button 
               onClick={() => refetch()} 
