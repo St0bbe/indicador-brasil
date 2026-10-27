@@ -94,7 +94,7 @@ export function CrimeDashboard() {
               Indicadores de Criminalidade
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Dados estimados a partir de notícias e portais públicos brasileiros.
+              Indicadores documentados em fontes oficiais brasileiras, com notícias como contexto complementar.
             </p>
           </div>
 
@@ -127,8 +127,7 @@ export function CrimeDashboard() {
           <CardContent className="flex items-start gap-3 py-3 text-xs text-navy">
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
-              Os dados apresentados são <strong>estimativas baseadas em notícias recentes e portais públicos</strong>,
-              coletadas via web scraping e estruturadas por IA. Não substituem boletins oficiais.
+              Os indicadores dependem de <strong>dados oficiais documentados</strong>, com prioridade para Atlas da Violência e Anuário Brasileiro de Segurança Pública. Notícias são apenas contexto. A disponibilidade varia conforme a cidade e o período; não são gerados números fictícios.
             </span>
           </CardContent>
         </Card>
@@ -182,9 +181,9 @@ export function CrimeDashboard() {
             {/* KPIs */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <KpiCard
-            label="Total estimado de ocorrências"
+            label="Total de ocorrências documentadas"
             value={loading || !data ? null : nf(data.totalOcorrencias)}
-            hint={`Estimadas ${PERIOD_LABEL[period]} em ${city}`}
+            hint={`Referentes a ${PERIOD_LABEL[period]} em ${city}`}
             icon={<BarChart3 className="h-5 w-5" />}
             tone="navy"
           />
