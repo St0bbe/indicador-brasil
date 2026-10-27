@@ -59,7 +59,7 @@ def importar(arquivo, ano):
             # Não somar recortes de agentes, sexo, idade e armas:
             # apenas linhas sem estratificação, que representam totais.
             if any(campo(c) not in (None, "") for c in
-                   ("agente", "arma", "faixa_etaria", "feminino", "masculino")
+                   ("agente", "arma", "faixa_etaria")
                    if c in pos):
                 rejeitadas += 1
                 continue
