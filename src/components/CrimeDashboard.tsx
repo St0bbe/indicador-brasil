@@ -77,6 +77,7 @@ export function CrimeDashboard() {
   const [erroMunicipiosPR, setErroMunicipiosPR] = useState(false);
   const [ufOficial, setUfOficial] = useState("São Paulo");
   const [buscaUf, setBuscaUf] = useState("");
+  const [anoGrafico, setAnoGrafico] = useState<"2024" | "2025" | "2026">("2025");
   const [period, setPeriod] = useState<Period>("mes");
   const [consultarCidade, setConsultarCidade] = useState(false);
   const [cidadeConsultada, setCidadeConsultada] = useState("");
@@ -260,6 +261,17 @@ export function CrimeDashboard() {
                 </div>
               )}
             </section>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div>
+                <label htmlFor="ano-graficos" className="block text-sm font-bold text-slate-900">Pesquisar gráficos por ano</label>
+                <p className="mt-1 text-xs text-slate-500">O ano selecionado controla os gráficos abaixo; períodos sem dados são sinalizados.</p>
+              </div>
+              <select id="ano-graficos" value={anoGrafico} onChange={e => setAnoGrafico(e.target.value as "2024" | "2025" | "2026")} className="h-11 min-w-36 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026 (parcial)</option>
+              </select>
+            </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 { titulo: "MVI em 2024", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][0]), estilo: "border-slate-200 bg-gradient-to-br from-slate-50 to-white text-slate-900" },
@@ -278,7 +290,7 @@ export function CrimeDashboard() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="text-base font-bold text-slate-900">Mortes violentas intencionais</h3>
-                    <p className="mt-1 text-xs text-slate-500">{ufOficial} · vítimas · comparação anual</p>
+                    <p className="mt-1 text-xs text-slate-500">{ufOficial} · vítimas · ano selecionado: {anoGrafico}</p>
                   </div>
                   {(() => {
                     const v = (oficiais.dados as Record<string, number[]>)[ufOficial];
@@ -288,9 +300,9 @@ export function CrimeDashboard() {
                     </span>;
                   })()}
                 </div>
-                <div className="mt-5 h-64 w-full">
+                {anoGrafico === "2026" ? <div className="mt-5 flex h-64 items-center justify-center rounded-xl bg-white p-5 text-center text-sm text-slate-600">Ainda não há MVI de 2026 com a mesma definição e abrangência nesta base. Consulte a seção de indicadores parciais de 2026.</div> : <div className="mt-5 h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart margin={{ top: 22, right: 10, left: 0, bottom: 0 }} barCategoryGap="42%" data={[{ ano: "2024", total: (oficiais.dados as Record<string, number[]>)[ufOficial][0] }, { ano: "2025", total: (oficiais.dados as Record<string, number[]>)[ufOficial][1] }]}>
+                    <BarChart margin={{ top: 22, right: 10, left: 0, bottom: 0 }} barCategoryGap="42%" data={[{ ano: anoGrafico, total: (oficiais.dados as Record<string, number[]>)[ufOficial][anoGrafico === "2024" ? 0 : 1] }]}>
                       <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 4" />
                       <XAxis dataKey="ano" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={nf} width={60} />
@@ -298,13 +310,13 @@ export function CrimeDashboard() {
                       <Bar dataKey="total" fill="#e11d48" radius={[8, 8, 0, 0]} maxBarSize={92} />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                </div>}
                 <p className="mt-2 text-xs text-slate-500">Fonte: Anuário Brasileiro de Segurança Pública 2026 · Tabela 02</p>
               </section>
               <section className="min-w-0 rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/40 p-4 shadow-sm sm:p-6">
                 <h3 className="text-base font-bold text-slate-900">Roubos e furtos</h3>
-                <p className="mt-1 text-xs text-slate-500">{ufOficial} · ocorrências de veículos e celulares · 2025</p>
-                <div className="mt-5 h-64 w-full">
+                <p className="mt-1 text-xs text-slate-500">{ufOficial} · ocorrências de veículos e celulares · {anoGrafico}</p>
+                {anoGrafico !== "2025" ? <div className="mt-5 flex h-64 items-center justify-center rounded-xl bg-white p-5 text-center text-sm text-slate-600">Os dados patrimoniais de {anoGrafico} ainda não foram importados. Selecione 2025 para visualizar roubos e furtos com fonte verificada.</div> : <div className="mt-5 h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart layout="vertical" margin={{ top: 5, right: 12, left: 8, bottom: 0 }} data={patrimonioUf.campos.map((campo, i) => ({ categoria: campo.replaceAll("_", " "), total: (patrimonioUf.dados as Record<string, number[]>)[ufOficial]?.[i] ?? 0 }))}>
                       <CartesianGrid horizontal={false} stroke="#e2e8f0" strokeDasharray="3 4" />
@@ -314,14 +326,14 @@ export function CrimeDashboard() {
                       <Bar dataKey="total" fill="#2563eb" radius={[0, 7, 7, 0]} maxBarSize={28} />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                </div>}
                 <p className="mt-2 text-xs text-slate-500">Fonte: Anuário Brasileiro de Segurança Pública 2026 · Tabelas 11 e 12</p>
               </section>
             </div>
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-              <h3 className="text-base font-bold text-slate-900">Categorias criminais — {ufOficial}</h3>
+              <h3 className="text-base font-bold text-slate-900">Categorias criminais — {ufOficial} · {anoGrafico}</h3>
               <p className="mt-1 text-xs text-slate-500">2025 · quantidades absolutas; categorias podem se sobrepor e não devem ser somadas.</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {anoGrafico !== "2025" ? <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Categorias detalhadas de {anoGrafico} ainda não importadas. Selecione 2025.</p> : <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {crimesUf.categorias.map((cat, i) => {
                   const valor = (crimesUf.dados as Record<string, (number | null)[]>)[ufOficial]?.[i];
                   return <div key={cat.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
@@ -330,7 +342,7 @@ export function CrimeDashboard() {
                     <p className="mt-1 text-xs text-slate-400">Anuário 2026 · Tabela {cat.tabela}</p>
                   </div>;
                 })}
-              </div>
+              </div>}
             </section>
             {ufOficial === "Brasil" && <div className="rounded-lg border p-4">
               <h3 className="mb-3 text-base font-semibold">Série histórica nacional de MVI (2012–2025)</h3>
