@@ -174,53 +174,79 @@ export function CrimeDashboard() {
               {!Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).includes(ufOficial) && <option value={ufOficial}>{ufOficial}</option>}
               {Object.keys(oficiais.dados).filter(nome => nome.toLocaleLowerCase("pt-BR").includes(buscaUf.toLocaleLowerCase("pt-BR"))).map(nome => <option key={nome} value={nome}>{nome}</option>)}
             </select>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">MVI 2024</p><p className="text-2xl font-bold">{nf((oficiais.dados as Record<string, number[]>)[ufOficial][0])}</p></div>
-              <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">MVI 2025</p><p className="text-2xl font-bold">{nf((oficiais.dados as Record<string, number[]>)[ufOficial][1])}</p></div>
-              <div className="rounded-lg border p-4"><p className="text-xs text-muted-foreground">Taxa de MVI 2025 por 100 mil</p><p className="text-2xl font-bold">{(oficiais.dados as Record<string, number[]>)[ufOficial][3].toLocaleString("pt-BR")}</p></div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { titulo: "MVI em 2024", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][0]), estilo: "border-slate-200 bg-gradient-to-br from-slate-50 to-white text-slate-900" },
+                { titulo: "MVI em 2025", valor: nf((oficiais.dados as Record<string, number[]>)[ufOficial][1]), estilo: "border-rose-200 bg-gradient-to-br from-rose-50 to-white text-rose-800" },
+                { titulo: "Taxa de MVI por 100 mil (2025)", valor: (oficiais.dados as Record<string, number[]>)[ufOficial][3].toLocaleString("pt-BR"), estilo: "border-blue-200 bg-gradient-to-br from-blue-50 to-white text-blue-900" },
+              ].map(item => (
+                <div key={item.titulo} className={`rounded-2xl border p-5 shadow-sm ${item.estilo}`}>
+                  <p className="text-xs font-semibold tracking-wide opacity-75">{item.titulo}</p>
+                  <p className="mt-2 text-3xl font-extrabold tabular-nums">{item.valor}</p>
+                  <p className="mt-1 text-xs opacity-70">Abrangência: {ufOficial}</p>
+                </div>
+              ))}
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-lg border p-4">
-                <h3 className="mb-3 text-base font-semibold">Mortes violentas intencionais — {ufOficial}</h3>
-                <p className="mb-2 text-xs text-muted-foreground">Total de vítimas por ano, abrangência estadual ou nacional</p>
-                <div className="h-64 w-full">
+              <section className="min-w-0 rounded-2xl border border-rose-100 bg-gradient-to-br from-white to-rose-50/50 p-4 shadow-sm sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Mortes violentas intencionais</h3>
+                    <p className="mt-1 text-xs text-slate-500">{ufOficial} · vítimas · comparação anual</p>
+                  </div>
+                  {(() => {
+                    const v = (oficiais.dados as Record<string, number[]>)[ufOficial];
+                    const variacao = v[0] > 0 ? ((v[1] - v[0]) / v[0]) * 100 : null;
+                    return <span className={`rounded-full px-3 py-1 text-xs font-bold ${variacao === null ? "bg-slate-100 text-slate-600" : variacao <= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                      {variacao === null ? "Sem comparação" : `${variacao > 0 ? "+" : ""}${variacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% vs. 2024`}
+                    </span>;
+                  })()}
+                </div>
+                <div className="mt-5 h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[{ ano: "2024", total: (oficiais.dados as Record<string, number[]>)[ufOficial][0] }, { ano: "2025", total: (oficiais.dados as Record<string, number[]>)[ufOficial][1] }]}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="ano" />
-                      <YAxis tickFormatter={nf} width={65} />
-                      <Tooltip formatter={(value) => nf(Number(value))} />
-                      <Bar dataKey="total" name="Vítimas" fill="#334155" />
+                    <BarChart margin={{ top: 22, right: 10, left: 0, bottom: 0 }} barCategoryGap="42%" data={[{ ano: "2024", total: (oficiais.dados as Record<string, number[]>)[ufOficial][0] }, { ano: "2025", total: (oficiais.dados as Record<string, number[]>)[ufOficial][1] }]}>
+                      <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 4" />
+                      <XAxis dataKey="ano" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={nf} width={60} />
+                      <Tooltip formatter={(value) => [nf(Number(value)), "Vítimas"]} cursor={{ fill: "#fff1f2" }} />
+                      <Bar dataKey="total" fill="#e11d48" radius={[8, 8, 0, 0]} maxBarSize={92} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <h3 className="mb-3 text-base font-semibold">Roubos e furtos — {ufOficial}</h3>
-                <p className="mb-2 text-xs text-muted-foreground">Registros oficiais em 2025, categorias patrimoniais distintas</p>
-                <div className="h-64 w-full">
+                <p className="mt-2 text-xs text-slate-500">Fonte: Anuário Brasileiro de Segurança Pública 2026 · Tabela 02</p>
+              </section>
+              <section className="min-w-0 rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/40 p-4 shadow-sm sm:p-6">
+                <h3 className="text-base font-bold text-slate-900">Roubos e furtos</h3>
+                <p className="mt-1 text-xs text-slate-500">{ufOficial} · ocorrências de veículos e celulares · 2025</p>
+                <div className="mt-5 h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" margin={{ left: 25 }} data={patrimonioUf.campos.map((campo, i) => ({ categoria: campo.replaceAll("_", " "), total: (patrimonioUf.dados as Record<string, number[]>)[ufOficial]?.[i] ?? 0 }))}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tickFormatter={nf} />
-                      <YAxis type="category" dataKey="categoria" width={105} tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(value) => nf(Number(value))} />
-                      <Bar dataKey="total" name="Registros" fill="#64748b" />
+                    <BarChart layout="vertical" margin={{ top: 5, right: 12, left: 8, bottom: 0 }} data={patrimonioUf.campos.map((campo, i) => ({ categoria: campo.replaceAll("_", " "), total: (patrimonioUf.dados as Record<string, number[]>)[ufOficial]?.[i] ?? 0 }))}>
+                      <CartesianGrid horizontal={false} stroke="#e2e8f0" strokeDasharray="3 4" />
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={nf} />
+                      <YAxis type="category" dataKey="categoria" width={108} axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 11 }} />
+                      <Tooltip formatter={(value) => [nf(Number(value)), "Registros"]} cursor={{ fill: "#eff6ff" }} />
+                      <Bar dataKey="total" fill="#2563eb" radius={[0, 7, 7, 0]} maxBarSize={28} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
+                <p className="mt-2 text-xs text-slate-500">Fonte: Anuário Brasileiro de Segurança Pública 2026 · Tabelas 11 e 12</p>
+              </section>
             </div>
-            <div className="rounded-lg border p-4">
-              <h3 className="mb-3 text-base font-semibold">Outras categorias criminais — {ufOficial}, 2025</h3>
-              <p className="mb-3 text-xs text-muted-foreground">Registros/vítimas conforme cada tabela do Anuário; categorias podem se sobrepor e não devem ser somadas.</p>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+              <h3 className="text-base font-bold text-slate-900">Categorias criminais — {ufOficial}</h3>
+              <p className="mt-1 text-xs text-slate-500">2025 · quantidades absolutas; categorias podem se sobrepor e não devem ser somadas.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {crimesUf.categorias.map((cat, i) => {
                   const valor = (crimesUf.dados as Record<string, (number | null)[]>)[ufOficial]?.[i];
-                  return <div key={cat.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{cat.id.replaceAll("_", " ")}</p><p className="text-lg font-semibold">{valor == null ? "Não informado" : nf(valor)}</p><p className="text-xs text-muted-foreground">Tabela {cat.tabela}</p></div>;
+                  return <div key={cat.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <p className="text-xs font-medium capitalize text-slate-500">{cat.id.replaceAll("_", " ")}</p>
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">{valor == null ? "Não informado" : nf(valor)}</p>
+                    <p className="mt-1 text-xs text-slate-400">Anuário 2026 · Tabela {cat.tabela}</p>
+                  </div>;
                 })}
               </div>
-            </div>
+            </section>
             {ufOficial === "Brasil" && <div className="rounded-lg border p-4">
               <h3 className="mb-3 text-base font-semibold">Série histórica nacional de MVI (2012–2025)</h3>
               <div className="h-64 w-full"><ResponsiveContainer width="100%" height="100%">
