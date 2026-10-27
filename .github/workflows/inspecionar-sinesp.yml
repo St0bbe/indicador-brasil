@@ -34,9 +34,15 @@ jobs:
           python -c "import zipfile; assert zipfile.is_zipfile('sinesp.xlsx'), 'Resposta nao e um XLSX valido'"
       - name: Inspecionar arquivos e colunas
         run: python scripts/inspecionar_sinesp.py sinesp.xlsx > estrutura-sinesp.txt
+      - name: Gerar base mensal agregada
+        env:
+          ANO: ${{ inputs.ano }}
+        run: python scripts/importar_sinesp_mensal.py sinesp.xlsx "$ANO"
       - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: estrutura-sinesp-${{ inputs.ano }}
-          path: estrutura-sinesp.txt
+          path: |
+            estrutura-sinesp.txt
+            src/data/sinesp-mensal-${{ inputs.ano }}.json
           retention-days: 7
