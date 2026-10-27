@@ -3,6 +3,7 @@ import { useState } from "react";
 import oficiais from "@/data/indicadores-oficiais-2026.json";
 import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
 import categorias from "@/data/categorias-criminais-brasil-2026.json";
+import patrimonio from "@/data/patrimonio-uf-2025.json";
 
 export const Route = createFileRoute("/fontes-oficiais")({
   component: FontesOficiais,
@@ -48,6 +49,16 @@ function FontesOficiais() {
           <tr className="border-b"><td className="p-2">MVI por 100 mil habitantes</td><td className="p-2">{nf(valores[2],1)}</td><td className="p-2">{nf(valores[3],1)}</td><td className="p-2">Anuário, tabela 02</td></tr>
           <tr><td className="p-2">Homicídios registrados por 100 mil habitantes</td><td className="p-2">{nf(valores[4],1)}</td><td className="p-2">Não disponível nesta edição</td><td className="p-2">Atlas, tabela 2.1</td></tr>
         </tbody></table></div>
+      </section>
+      <section className="rounded-lg border p-5 space-y-3">
+        <h2 className="text-xl font-semibold">Crimes patrimoniais em {uf} — 2025</h2>
+        <p className="text-sm text-muted-foreground">Registros absolutos por unidade da federação; tabelas 11 (p. 93) e 12 (p. 95) do Anuário Brasileiro de Segurança Pública 2026. Não representam dados municipais.</p>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Indicador</th><th className="p-2">Registros em 2025</th></tr></thead><tbody>
+          {patrimonio.campos.map((campo, index) => (
+            <tr className="border-b" key={campo}><td className="p-2">{campo.replaceAll("_", " ")}</td><td className="p-2">{nf((patrimonio.dados as Record<string, number[]>)[uf][index])}</td></tr>
+          ))}
+        </tbody></table></div>
+        <p className="text-xs text-muted-foreground">Categorias distintas; não somar a outras estatísticas criminais sem verificar sobreposições e metodologias.</p>
       </section>
       <section className="rounded-lg border p-5 space-y-3">
         <h2 className="text-xl font-semibold">Série histórica nacional — MVI (2012–2025)</h2>
