@@ -139,7 +139,10 @@ export function CrimeDashboard() {
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["crime-report", cidadeConsultada, period],
     enabled: consultarCidade && cidadeConsultada.length >= 2,
-    queryFn: () => callFn({ data: { city: cidadeConsultada, period } }),
+    queryFn: () => Promise.race([
+      callFn({ data: { city: cidadeConsultada, period } }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Tempo limite de 20 segundos na consulta externa")), 20000)),
+    ]),
     staleTime: 60 * 60 * 1000,
     retry: 0,
   });
@@ -158,7 +161,7 @@ export function CrimeDashboard() {
   };
 
   const variationUp = (data?.variacao ?? 0) >= 0;
-  const loading = consultarCidade && (isLoading || isFetching);
+  const loading = consultarCidade && isLoading;
 
   return (
     <div className="min-h-screen bg-background print:bg-white">
@@ -492,8 +495,8 @@ export function CrimeDashboard() {
           </Card>
         )}
 
-        {/* Conteúdo Principal (Só renderiza se não houver erro crítico) */}
-        {consultarCidade && !isError && (
+        {/* A consulta externa é complementar; o painel oficial acima independe dela. */}
+        {consultarCidade && !isError && data && !data.isMocked && (
           <>
             {/* KPIs */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
