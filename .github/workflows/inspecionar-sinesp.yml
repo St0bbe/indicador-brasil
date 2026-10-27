@@ -1,6 +1,16 @@
 name: Inspecionar base mensal Sinesp
 on:
   workflow_dispatch:
+    inputs:
+      ano:
+        description: Ano a inspecionar
+        type: choice
+        required: true
+        default: '2025'
+        options:
+          - '2024'
+          - '2025'
+          - '2026'
 jobs:
   inspecionar:
     runs-on: ubuntu-latest
@@ -12,16 +22,21 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install openpyxl
-      - name: Baixar arquivo oficial do Sinesp VDE
+      - name: Baixar planilha anual do portal gov.br
+        env:
+          ANO: ${{ inputs.ano }}
         run: |
-          curl --fail --location --retry 3 --connect-timeout 20 --max-time 300 \
-            "https://dados.mj.gov.br/dataset/210b9ae2-21fc-4986-89c6-2006eb4db247/resource/e9d6cc2b-33f1-468d-ab09-9aa8303c2eba/download/basededadosvde.zip" \
-            --output basededadosvde.zip
-          python -c "import zipfile; assert zipfile.is_zipfile('basededadosvde.zip'), 'Download nao e ZIP valido'"
+          set -euo pipefail
+          URL="https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/download/dnsp-base-de-dados/bancovde-${ANO}.xlsx/@@download/file"
+          echo "Tentando fonte alternativa oficial www.gov.br para o ano ${ANO}"
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 240 \
+            --user-agent "Mozilla/5.0" "$URL" --output sinesp.xlsx
+          python -c "import zipfile; assert zipfile.is_zipfile('sinesp.xlsx'), 'Resposta nao e um XLSX valido'"
       - name: Inspecionar arquivos e colunas
-        run: python scripts/inspecionar_sinesp.py basededadosvde.zip > estrutura-sinesp.txt
+        run: python scripts/inspecionar_sinesp.py sinesp.xlsx > estrutura-sinesp.txt
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: estrutura-sinesp
+          name: estrutura-sinesp-${{ inputs.ano }}
           path: estrutura-sinesp.txt
           retention-days: 7
