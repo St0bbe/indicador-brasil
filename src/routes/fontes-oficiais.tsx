@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import oficiais from "@/data/indicadores-oficiais-2026.json";
 import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
+import categorias from "@/data/categorias-criminais-brasil-2026.json";
 
 export const Route = createFileRoute("/fontes-oficiais")({
   component: FontesOficiais,
@@ -59,6 +60,16 @@ function FontesOficiais() {
             </div>
           ))}
         </div>
+      </section>
+      <section className="rounded-lg border p-5 space-y-3">
+        <h2 className="text-xl font-semibold">Outras categorias criminais — Brasil</h2>
+        <p className="text-sm text-muted-foreground">Dados nacionais de 2024 e 2025, extraídos do Anuário 2026. Não são dados estaduais nem municipais. Taxas conforme publicadas nas tabelas originais.</p>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Categoria</th><th className="p-2">2024</th><th className="p-2">2025</th><th className="p-2">Taxa 2025</th><th className="p-2">Página</th></tr></thead><tbody>
+          {categorias.indicadores.map(item => (
+            <tr key={item.nome} className="border-b"><td className="p-2">{item.nome}</td><td className="p-2">{nf(item.anos["2024"].total)}</td><td className="p-2">{nf(item.anos["2025"].total)}</td><td className="p-2">{nf(item.anos["2025"].taxa, 1)}</td><td className="p-2">{item.pagina}</td></tr>
+          ))}
+        </tbody></table></div>
+        <p className="text-xs text-muted-foreground">As categorias não são mutuamente exclusivas. Não some os valores para obter um total geral de crimes. Para detalhes metodológicos, consulte as notas das tabelas originais.</p>
       </section>
       <section className="space-y-2 text-sm text-muted-foreground">
         <p><strong>Metodologia:</strong> MVI são indicadores policiais compilados pelo FBSP; homicídios registrados do Atlas são baseados no SIM/MS. Não devem ser somados nem comparados como se fossem o mesmo indicador. Os anos indicam o período dos dados, não o ano de publicação.</p>
