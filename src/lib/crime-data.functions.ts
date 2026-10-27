@@ -251,7 +251,7 @@ async function extractWithAI(
         },
       },
     ],
-    tool_choice: "auto",
+    tool_choice: { type: "function", function: { name: "extrair_indicadores" } },
   };
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
