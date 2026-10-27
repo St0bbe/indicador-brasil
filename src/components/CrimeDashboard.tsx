@@ -58,6 +58,7 @@ export function CrimeDashboard() {
   const [ufOficial, setUfOficial] = useState("São Paulo");
   const [buscaUf, setBuscaUf] = useState("");
   const [period, setPeriod] = useState<Period>("mes");
+  const [consultarCidade, setConsultarCidade] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export function CrimeDashboard() {
   const callFn = useServerFn(fetchCrimeReport);
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["crime-report", city, period],
+    enabled: consultarCidade,
     queryFn: () => callFn({ data: { city, period } }),
     staleTime: 60 * 60 * 1000,
     retry: 0,
@@ -82,7 +84,7 @@ export function CrimeDashboard() {
   };
 
   const variationUp = (data?.variacao ?? 0) >= 0;
-  const loading = isLoading || isFetching;
+  const loading = consultarCidade && (isLoading || isFetching);
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,6 +157,14 @@ export function CrimeDashboard() {
           </CardContent>
         </Card>
 
+        <Card className="mb-6 border-border/70">
+          <CardContent className="space-y-3 py-4">
+            <p className="text-sm font-semibold">Consulta municipal experimental</p>
+            <p className="text-sm text-muted-foreground">Os dados oficiais por estado já aparecem acima, sem depender de serviços externos. Para tentar pesquisar estatísticas específicas de {city}, use o botão abaixo. Algumas cidades e períodos não possuem dados públicos compatíveis, e a consulta pode falhar.</p>
+            <button type="button" onClick={() => setConsultarCidade(true)} disabled={loading} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">Pesquisar dados municipais de {city}</button>
+          </CardContent>
+        </Card>
+
         {loading && (
           <Card className="mb-6 border-border/70">
             <CardContent className="flex items-center gap-3 py-4 text-sm text-muted-foreground">
@@ -164,7 +174,7 @@ export function CrimeDashboard() {
           </Card>
         )}
 
-        {isError && (
+        {consultarCidade && isError && (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="rounded-full bg-danger/10 p-4 mb-4">
               <ShieldAlert className="h-10 w-10 text-danger" />
@@ -184,7 +194,7 @@ export function CrimeDashboard() {
           </div>
         )}
 
-        {!isError && data?.isMocked && (
+        {consultarCidade && !isError && data?.isMocked && (
           <Card className="mb-6 border-amber-400/40 bg-amber-50">
             <CardContent className="flex items-start gap-3 py-4 text-sm text-amber-800">
               <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -200,7 +210,7 @@ export function CrimeDashboard() {
         )}
 
         {/* Conteúdo Principal (Só renderiza se não houver erro crítico) */}
-        {!isError && (
+        {consultarCidade && !isError && (
           <>
             {/* KPIs */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
