@@ -25,6 +25,7 @@ import {
   BarChart3,
   ExternalLink,
   Info,
+  Download,
   Loader2,
   RefreshCcw,
   ShieldAlert,
@@ -124,14 +125,20 @@ export function CrimeDashboard() {
     refetch();
   };
 
+  const exportarPDF = () => {
+    // A impressão do navegador preserva o conteúdo e permite salvar em PDF,
+    // sem enviar dados da pesquisa para serviços externos.
+    window.print();
+  };
+
   const variationUp = (data?.variacao ?? 0) >= 0;
   const loading = consultarCidade && (isLoading || isFetching);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background print:bg-white">
       <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8"><a href="/fontes-oficiais" className="inline-flex rounded-md border px-4 py-2 text-sm font-semibold hover:bg-accent">Consultar dados oficiais do Atlas e Anuário por estado →</a></div>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header className="mb-8 flex print:hidden flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
               <ShieldAlert className="h-3.5 w-3.5 text-danger" />
@@ -147,7 +154,7 @@ export function CrimeDashboard() {
 
         </header>
 
-        <section className="mb-6 rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-5 shadow-sm sm:p-6">
+        <section className="mb-6 rounded-2xl border border-blue-100 print:hidden bg-gradient-to-br from-white to-blue-50 p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Pesquisar por estado, cidade e período</h2>
           <p className="mt-1 mb-4 text-sm text-slate-500">Uma pesquisa única para os indicadores oficiais disponíveis.</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -189,6 +196,17 @@ export function CrimeDashboard() {
         </section>
 
 
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm print:hidden">
+          <p className="text-sm text-slate-600">Exporte os indicadores e gráficos exibidos, com o local, o período e as fontes.</p>
+          <button type="button" onClick={exportarPDF} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">
+            <Download className="h-4 w-4" /> Baixar relatório em PDF
+          </button>
+        </div>
+        <div className="hidden print:block">
+          <h2 className="text-xl font-bold">Indicador Brasil — Relatório de Segurança Pública</h2>
+          <p className="text-sm">Local: {city || ufOficial} · Estado: {ufOficial} · Ano: {anoGrafico} · Período: {period === "ano" ? "anual" : period === "mes" ? "mensal" : "semanal"}{period !== "ano" && mesPesquisa !== "todos" ? " · Mês: " + mesPesquisa : ""}{period === "semana" ? " · Semana: " + semanaPesquisa : ""}</p>
+          <p className="text-xs">Gerado em: {new Date().toLocaleDateString("pt-BR")}. Dados somente para períodos com cobertura documentada.</p>
+        </div>
         {/* Aviso de transparência */}
         <Card className="mb-6 border-navy/20 bg-navy/5">
           <CardContent className="flex items-start gap-3 py-3 text-xs text-navy">
