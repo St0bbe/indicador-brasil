@@ -80,7 +80,7 @@ export function CrimeDashboard() {
   const [mesPesquisa, setMesPesquisa] = useState("todos");
   const [semanaPesquisa, setSemanaPesquisa] = useState("1");
   const [anoGrafico, setAnoGrafico] = useState<"2024" | "2025" | "2026">("2025");
-  const [period, setPeriod] = useState<Period>("mes");
+  const [period, setPeriod] = useState<Period>("ano");
   const [consultarCidade, setConsultarCidade] = useState(false);
   const [cidadeConsultada, setCidadeConsultada] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -192,7 +192,7 @@ export function CrimeDashboard() {
             </label>}
           </div>
           <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">Local: <strong>{city || ufOficial}</strong> · {anoGrafico} · {period === "ano" ? "ano inteiro" : period === "mes" ? "mês" : "semana"}</p>
-          {period !== "ano" && <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Ainda não há séries mensais ou semanais importadas e validadas. Os totais anuais abaixo são apenas referência e não correspondem ao período selecionado.</p>}
+          {period !== "ano" && <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Ainda não há séries mensais ou semanais importadas e validadas. Os gráficos históricos anuais abaixo são apenas referência e não correspondem ao período selecionado.</p>}
         </section>
 
 
@@ -371,7 +371,44 @@ export function CrimeDashboard() {
                 <LineChart data={historicoMvi.serie}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="ano" /><YAxis tickFormatter={nf} width={65} /><Tooltip formatter={(value) => nf(Number(value))} /><Line type="monotone" dataKey="total" name="Vítimas" stroke="#334155" strokeWidth={2} dot={false} /></LineChart>
               </ResponsiveContainer></div>
             </div>}
-            </> : <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Nenhum gráfico mensal ou semanal verificado foi importado para este local e período. Selecione “Ano” para consultar os dados anuais disponíveis.</div>}
+            </> : <div className="space-y-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <p className="font-semibold">Dados {period === "mes" ? "mensais" : "semanais"} indisponíveis para {city || ufOficial} — {anoGrafico}{mesPesquisa !== "todos" ? " / mês " + mesPesquisa : ""}{period === "semana" ? " / semana " + semanaPesquisa : ""}.</p>
+                <p className="mt-1">Não há registros oficiais por esse intervalo importados no sistema. Os gráficos a seguir são referências ANUAIS de 2024 e 2025, não representam o mês ou a semana pesquisados.</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+                <h3 className="text-base font-bold text-slate-900">Referência histórica anual — mortes violentas intencionais</h3>
+                <p className="mt-1 text-xs text-slate-500">{ufOficial} · totais anuais de 2024 e 2025 · não correspondem ao filtro mensal/semanal</p>
+                <div className="mt-4 h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[{ ano: "2024", total: (oficiais.dados as Record<string, number[]>)[ufOficial][0] }, { ano: "2025", total: (oficiais.dados as Record<string, number[]>)[ufOficial][1] }]} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                      <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 4" />
+                      <XAxis dataKey="ano" axisLine={false} tickLine={false} />
+                      <YAxis tickFormatter={nf} axisLine={false} tickLine={false} width={65} />
+                      <Tooltip formatter={value => [nf(Number(value)), "Vítimas no ano inteiro"]} />
+                      <Bar dataKey="total" fill="#e11d48" radius={[8,8,0,0]} maxBarSize={95} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-slate-500">Fonte: Anuário Brasileiro de Segurança Pública 2026, tabela 02.</p>
+              </div>
+              <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm sm:p-6">
+                <h3 className="text-base font-bold text-slate-900">Referência anual — roubos e furtos em 2025</h3>
+                <p className="mt-1 text-xs text-slate-500">{ufOficial} · veículos e celulares · totais do ano inteiro, não do período filtrado</p>
+                <div className="mt-4 h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={patrimonioUf.campos.map((campo, i) => ({ categoria: campo.replaceAll("_", " "), total: (patrimonioUf.dados as Record<string, number[]>)[ufOficial]?.[i] ?? 0 }))} margin={{ left: 8, right: 12 }}>
+                      <CartesianGrid horizontal={false} stroke="#e2e8f0" strokeDasharray="3 4" />
+                      <XAxis type="number" tickFormatter={nf} />
+                      <YAxis type="category" dataKey="categoria" width={108} tick={{ fontSize: 10 }} />
+                      <Tooltip formatter={value => [nf(Number(value)), "Registros em 2025"]} />
+                      <Bar dataKey="total" fill="#2563eb" radius={[0,7,7,0]} maxBarSize={30} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-slate-500">Fonte: Anuário Brasileiro de Segurança Pública 2026, tabelas 11 e 12.</p>
+              </div>
+            </div>}
             <p className="text-xs text-muted-foreground">Fonte: Anuário Brasileiro de Segurança Pública 2026, tabelas 02, 11, 12, 17, 21, 24, 29 e 31. Dados estaduais/nacionais, não municipais. A pesquisa municipal abaixo depende de fontes próprias.</p>
             <a href="/fontes-oficiais" className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Ver todas as categorias oficiais</a>
           </CardContent>
