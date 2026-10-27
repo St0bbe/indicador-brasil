@@ -1,0 +1,224 @@
+{
+  "versao": 1,
+  "abrangencia": "Brasil",
+  "publicacao": "Anuário Brasileiro de Segurança Pública 2026",
+  "url": "https://publicacoes.forumseguranca.org.br/handle/fbsp/305",
+  "observacoes": [
+    "Transcrição de linhas Brasil das tabelas originais; taxas publicadas, não recalculadas.",
+    "Taxas por 100 mil habitantes; indicadores de vítimas mulheres podem usar denominador específico definido nas notas de cada tabela.",
+    "Indicadores não são mutuamente exclusivos: não somar categorias para formar um total de crimes.",
+    "Estelionato por meio eletrônico é subcategoria de estelionato; feminicídio integra homicídios de mulheres."
+  ],
+  "indicadores": [
+    {
+      "nome": "Roubo de veículos",
+      "pagina": 93,
+      "anos": {
+        "2024": {
+          "total": 126358,
+          "taxa": 101.9
+        },
+        "2025": {
+          "total": 104491,
+          "taxa": 80.9
+        }
+      }
+    },
+    {
+      "nome": "Furto de veículos",
+      "pagina": 93,
+      "anos": {
+        "2024": {
+          "total": 219145,
+          "taxa": 176.8
+        },
+        "2025": {
+          "total": 203949,
+          "taxa": 158
+        }
+      }
+    },
+    {
+      "nome": "Roubo de celulares",
+      "pagina": 95,
+      "anos": {
+        "2024": {
+          "total": 377787,
+          "taxa": 177.7
+        },
+        "2025": {
+          "total": 308723,
+          "taxa": 144.7
+        }
+      }
+    },
+    {
+      "nome": "Furto de celulares",
+      "pagina": 95,
+      "anos": {
+        "2024": {
+          "total": 477326,
+          "taxa": 224.5
+        },
+        "2025": {
+          "total": 483561,
+          "taxa": 226.6
+        }
+      }
+    },
+    {
+      "nome": "Roubo a estabelecimento comercial",
+      "pagina": 99,
+      "anos": {
+        "2024": {
+          "total": 27975,
+          "taxa": 13.2
+        },
+        "2025": {
+          "total": 22937,
+          "taxa": 10.7
+        }
+      }
+    },
+    {
+      "nome": "Roubo a residência",
+      "pagina": 99,
+      "anos": {
+        "2024": {
+          "total": 19950,
+          "taxa": 9.4
+        },
+        "2025": {
+          "total": 16048,
+          "taxa": 7.5
+        }
+      }
+    },
+    {
+      "nome": "Estelionato",
+      "pagina": 120,
+      "anos": {
+        "2024": {
+          "total": 2193122,
+          "taxa": 1031.7
+        },
+        "2025": {
+          "total": 2261055,
+          "taxa": 1059.4
+        }
+      }
+    },
+    {
+      "nome": "Estelionato por meio eletrônico",
+      "pagina": 120,
+      "anos": {
+        "2024": {
+          "total": 286226,
+          "taxa": 204.2
+        },
+        "2025": {
+          "total": 346753,
+          "taxa": 246.2
+        }
+      }
+    },
+    {
+      "nome": "Homicídios de mulheres (incluindo feminicídios)",
+      "pagina": 149,
+      "anos": {
+        "2024": {
+          "total": 3728,
+          "taxa": 3.4
+        },
+        "2025": {
+          "total": 3539,
+          "taxa": 3.2
+        }
+      }
+    },
+    {
+      "nome": "Feminicídios",
+      "pagina": 149,
+      "anos": {
+        "2024": {
+          "total": 1504,
+          "taxa": 1.4
+        },
+        "2025": {
+          "total": 1571,
+          "taxa": 1.4
+        }
+      }
+    },
+    {
+      "nome": "Lesão corporal dolosa em violência doméstica (vítimas mulheres)",
+      "pagina": 152,
+      "anos": {
+        "2024": {
+          "total": 277916,
+          "taxa": 255.2
+        },
+        "2025": {
+          "total": 286270,
+          "taxa": 261.7
+        }
+      }
+    },
+    {
+      "nome": "Estupro",
+      "pagina": 181,
+      "anos": {
+        "2024": {
+          "total": 20551,
+          "taxa": 9.7
+        },
+        "2025": {
+          "total": 19398,
+          "taxa": 9.1
+        }
+      }
+    },
+    {
+      "nome": "Estupro de vulnerável",
+      "pagina": 181,
+      "anos": {
+        "2024": {
+          "total": 68292,
+          "taxa": 32.1
+        },
+        "2025": {
+          "total": 64990,
+          "taxa": 30.5
+        }
+      }
+    },
+    {
+      "nome": "Assédio sexual",
+      "pagina": 185,
+      "anos": {
+        "2024": {
+          "total": 8571,
+          "taxa": 4
+        },
+        "2025": {
+          "total": 9031,
+          "taxa": 4.2
+        }
+      }
+    },
+    {
+      "nome": "Importunação sexual",
+      "pagina": 185,
+      "anos": {
+        "2024": {
+          "total": 39029,
+          "taxa": 18.4
+        },
+        "2025": {
+          "total": 41425,
+          "taxa": 19.4
+        }
+      }
+    }
+  ]
+}
