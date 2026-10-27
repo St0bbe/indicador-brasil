@@ -207,6 +207,15 @@ export function CrimeDashboard() {
           />
         </section>
 
+        {data && !loading && (
+          <section className="mt-4 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground" aria-label="Metadados dos indicadores">
+            <p><strong>Ano de referência:</strong> {data.anoReferencia ?? "Não informado"}</p>
+            <p><strong>Abrangência:</strong> {data.abrangencia ?? "Não informada"}</p>
+            <p><strong>Metodologia:</strong> {data.metodologia ?? "Não informada"}</p>
+            <p className="mt-2 text-xs">A data de atualização do painel não é a data de referência dos indicadores.</p>
+          </section>
+        )}
+
         {/* Gráficos */}
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-2 border-border/70 shadow-[var(--shadow-card)]">
