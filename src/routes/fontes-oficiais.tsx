@@ -4,6 +4,7 @@ import oficiais from "@/data/indicadores-oficiais-2026.json";
 import historicoMvi from "@/data/mvi-brasil-serie-2012-2025.json";
 import categorias from "@/data/categorias-criminais-brasil-2026.json";
 import patrimonio from "@/data/patrimonio-uf-2025.json";
+import crimesUf from "@/data/crimes-uf-2025.json";
 
 export const Route = createFileRoute("/fontes-oficiais")({
   component: FontesOficiais,
@@ -49,6 +50,17 @@ function FontesOficiais() {
           <tr className="border-b"><td className="p-2">MVI por 100 mil habitantes</td><td className="p-2">{nf(valores[2],1)}</td><td className="p-2">{nf(valores[3],1)}</td><td className="p-2">Anuário, tabela 02</td></tr>
           <tr><td className="p-2">Homicídios registrados por 100 mil habitantes</td><td className="p-2">{nf(valores[4],1)}</td><td className="p-2">Não disponível nesta edição</td><td className="p-2">Atlas, tabela 2.1</td></tr>
         </tbody></table></div>
+      </section>
+      <section className="rounded-lg border p-5 space-y-3">
+        <h2 className="text-xl font-semibold">Fraudes, violência contra mulheres e crimes sexuais — {uf}</h2>
+        <p className="text-sm text-muted-foreground">Registros de 2025, conforme as tabelas 17, 21, 24, 29 e 31 do Anuário 2026. Os indicadores são independentes e podem se sobrepor.</p>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Categoria</th><th className="p-2">2025</th><th className="p-2">Tabela / página</th></tr></thead><tbody>
+          {crimesUf.categorias.map((cat, index) => {
+            const valor = (crimesUf.dados as Record<string, (number | null)[]>)[uf]?.[index];
+            return <tr className="border-b" key={cat.id}><td className="p-2">{cat.id.replaceAll("_", " ")}</td><td className="p-2">{valor == null ? "Não informado" : nf(valor)}</td><td className="p-2">{cat.tabela} / {cat.pagina}</td></tr>;
+          })}
+        </tbody></table></div>
+        <p className="text-xs text-muted-foreground">Dados estaduais/nacionais, não municipais. Células não informadas permanecem vazias; não são tratadas como zero.</p>
       </section>
       <section className="rounded-lg border p-5 space-y-3">
         <h2 className="text-xl font-semibold">Crimes patrimoniais em {uf} — 2025</h2>
