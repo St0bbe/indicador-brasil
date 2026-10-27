@@ -79,7 +79,11 @@ export function CrimeDashboard() {
 
   const handleRefresh = async () => {
     if (isFetching) return;
-    await callFn({ data: { city, period, forceRefresh: true } });
+    try {
+      await callFn({ data: { city, period, forceRefresh: true } });
+    } catch (e) {
+      console.warn("Falha ao recarregar dados:", e);
+    }
     refetch();
   };
 

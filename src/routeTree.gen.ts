@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FontesOficiaisRouteImport } from './routes/fontes-oficiais'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FontesOficiaisRoute = FontesOficiaisRouteImport.update({
+  id: '/fontes-oficiais',
+  path: '/fontes-oficiais',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/fontes-oficiais': typeof FontesOficiaisRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/fontes-oficiais': typeof FontesOficiaisRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/fontes-oficiais': typeof FontesOficiaisRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/fontes-oficiais'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/fontes-oficiais'
+  id: '__root__' | '/' | '/fontes-oficiais'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FontesOficiaisRoute: typeof FontesOficiaisRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fontes-oficiais': {
+      id: '/fontes-oficiais'
+      path: '/fontes-oficiais'
+      fullPath: '/fontes-oficiais'
+      preLoaderRoute: typeof FontesOficiaisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FontesOficiaisRoute: FontesOficiaisRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

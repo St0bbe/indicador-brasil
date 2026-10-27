@@ -11,7 +11,7 @@ export const Route = createFileRoute("/fontes-oficiais")({
 });
 
 type Linha = [number, number, number, number, number];
-const dados = oficiais.dados as Record<string, Linha>;
+const dados = oficiais.dados as unknown as Record<string, Linha>;
 const nf = (v: number, digits = 0) =>
   new Intl.NumberFormat("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v);
 
