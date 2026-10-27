@@ -1,0 +1,36 @@
+name: Inspecionar base mensal Sinesp
+on:
+  workflow_dispatch:
+    inputs:
+      ano:
+        description: Ano da planilha
+        required: true
+        default: '2026'
+        type: choice
+        options: ['2024', '2025', '2026']
+jobs:
+  inspecionar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install openpyxl
+      - name: Baixar arquivo oficial
+        env:
+          ANO: ${{ inputs.ano }}
+        run: |
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+            "https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/estatistica/download/dnsp-base-de-dados/bancovde-${ANO}.xlsx/@@download/file" \
+            --output sinesp.xlsx
+          python -c "import zipfile; assert zipfile.is_zipfile('sinesp.xlsx'), 'Arquivo retornado não é XLSX válido'"
+      - name: Inspecionar abas e cabeçalhos
+        run: python scripts/inspecionar_sinesp.py sinesp.xlsx > estrutura-sinesp.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: estrutura-sinesp-${{ inputs.ano }}
+          path: estrutura-sinesp.txt
+          retention-days: 7
